@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ConneX - Seguridad de Extremo a Extremo</title>
+    <link rel="stylesheet" href="/css/global.css">
+    <link rel="stylesheet" href="/css/cifrado.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <main class="centered-layout">
+            
+            <div class="module-card">
+                <header class="module-header">
+                    <button class="btn-back-circle" onclick="window.location.href='/ajustes.html'">
+                        <span class="material-icons">arrow_back</span>
+                    </button>
+                    <h1>Seguridad</h1>
+                </header>
+
+                <div class="qr-section">
+                    <div class="qr-frame">
+                        <div id="qrLoader" class="loader-overlay">
+                            <div class="spinner"></div>
+                            <p>Generando llaves...</p>
+                        </div>
+                        <img id="qrCodeImage" src="" alt="Código de Verificación" style="display:none;">
+                    </div>
+                    <p class="helper-text">Tu código de seguridad confirma que los mensajes están cifrados de extremo a extremo.</p>
+                </div>
+
+                <div class="info-box">
+                    <div class="status-badge">
+                        <span class="material-icons">verified</span>
+                        <span id="statusText">Dispositivo Vinculado</span>
+                    </div>
+                    
+                    <div class="info-content">
+                        <h3>Cifrado RSA-2048</h3>
+                        <p>Solo tú y la persona con la que chateas tienen las llaves para leer sus conversaciones.</p>
+                    </div>
+
+                    <div class="key-display-area">
+                        <div class="key-header">
+                            <small>Código de seguridad</small>
+                            <span class="material-icons" id="btnCopiar" title="Copiar código">content_copy</span>
+                        </div>
+
+                        <!-- 👇 AQUÍ SE MOSTRARÁ EL FINGERPRINT -->
+                        <code id="identidadClave" class="fingerprint">
+                            Generando código de seguridad...
+                        </code>
+
+                        <p class="fingerprint-info">
+                            Compara este código con tu contacto para verificar que nadie intercepta la conversación.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="actions-group">
+                    <button class="btn-action primary" id="btnRenovar" onclick="generarNuevasLlaves()">
+                        <span class="material-icons">sync</span>
+                        Renovar llaves de seguridad
+                    </button>
+                    
+                    <div class="multimedia-test">
+                        <label for="pruebaArchivo" class="file-label">
+                            <span class="material-icons">attach_file</span>
+                            Probar cifrado de archivos
+                        </label>
+                        <input type="file" id="pruebaArchivo" hidden onchange="console.log('Archivo listo para cifrar ArrayBuffer')">
+                    </div>
+                </div>
+
+                <footer class="security-footer">
+                    <span class="material-icons">lock</span>
+                    <p>ConneX Security Framework v1.0</p>
+                </footer>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="/js/cifrado.js"></script>
+    <script src="/js/chatsgrupos.js"></script>
+</body>
+</html>

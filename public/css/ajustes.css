@@ -1,0 +1,687 @@
+/* --- CONTENEDOR GRID PARA EVITAR HUECOS --- */
+.settings-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+    width: 100%;
+    max-width: 600px; /* Ancho por defecto en móvil */
+    margin: 0 auto;
+}
+
+@media (min-width: 1024px) {
+    .settings-container {
+        max-width: 1200px;
+        grid-template-columns: repeat(2, 1fr); /* 2 Columnas simétricas */
+    }
+    .profile-main, .section-label, .footer-actions {
+        grid-column: 1 / -1; /* Estas filas ocupan todo el ancho */
+    }
+}
+
+/* --- TARJETAS Y FILAS --- */
+.settings-card {
+     background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 18px;
+    padding: 20px;
+    border: 1px solid #2a2a2a;
+}
+
+.setting-row {
+    display: flex;
+    align-items: center; /* Centra iconos y texto */
+    gap: 15px;
+}
+
+.icon-circle {
+    background-color: var(--primary-purple);
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.section-label {
+    font-size: 14px;
+    color: var(--primary-purple);
+    font-weight: bold;
+    margin: 15px 0 5px 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* --- BOTÓN EDITAR PERFIL --- */
+.edit-link {
+    background: rgba(142, 45, 226, 0.1);
+    color: var(--primary-purple);
+    border: 1px solid var(--primary-purple);
+    padding: 6px 15px;
+    border-radius: 20px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: 0.3s;
+    margin-top: 10px;
+}
+
+.edit-link:hover {
+    background: var(--primary-purple);
+    color: white;
+}
+
+/* --- SELECTOR DARK --- */
+.dark-select {
+    background-color: #2a2a2a;
+    color: white;
+    border: 1px solid #444;
+    padding: 5px;
+    border-radius: 5px;
+    margin-top: 5px;
+}
+
+/* --- SWITCH (INTERRUPTOR) MODERNO --- */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 22px;
+    margin-left: auto;
+}
+
+.switch input { opacity: 0; width: 0; height: 0; }
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #444;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px; width: 16px;
+    left: 3px; bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider { background-color: var(--primary-purple); }
+input:checked + .slider:before { transform: translateX(22px); }
+
+/* --- FOOTER / ACCIONES FINALES --- */
+.footer-actions {
+    display: flex;
+    flex-direction: column; /* Por defecto en móvil: uno debajo de otro */
+    gap: 20px;
+    padding: 20px !important;
+}
+
+.action-item {
+    display: flex;
+    align-items: center;
+    gap: 15px; /* Más espacio entre icono y texto para que sea fácil de tocar */
+    cursor: pointer;
+    font-size: 15px; /* Un poquito más grande para legibilidad en móvil */
+    width: 100%;    /* Asegura que ocupen todo el ancho */
+}
+
+/* --- ADAPTACIÓN PARA PC (Pantallas grandes) --- */
+@media (min-width: 1024px) {
+    .footer-actions {
+        flex-direction: row; /* En PC vuelven a estar a la par */
+        justify-content: space-around;
+        gap: 0;
+    }
+
+    .action-item {
+        width: auto;
+        font-size: 14px;
+    }
+}
+
+.action-item.danger {
+    color: #ff5252;
+}
+
+/* Tarjetas Clickables */
+.settings-card.clickable {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.settings-card.clickable:hover {
+    background-color: #252525;
+    transform: translateY(-2px);
+    border-color: var(--primary-purple);
+}
+
+.settings-card.clickable:active {
+    transform: scale(0.98);
+}
+
+/* El icono de flecha a la derecha */
+.chevron {
+    color: #555;
+    margin-left: auto;
+}
+
+.settings-card.clickable:hover .chevron {
+    color: var(--primary-purple);
+}
+
+/* Línea divisoria interna */
+.border-bottom {
+    border-bottom: 1px solid #333;
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+}
+
+/* Contenedor de la lista de bloqueados */
+.blocked-list-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.blocked-item-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px;
+    border-bottom: 1px solid #2a2a2a;
+    transition: background 0.2s;
+}
+
+.blocked-item-row:last-child {
+    border-bottom: none;
+}
+
+.blocked-item-row:hover {
+    background-color: #252525;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.user-info img {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid #444;
+}
+
+.user-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.user-text .name {
+    font-size: 15px;
+    font-weight: 600;
+    color: white;
+}
+
+.user-text .phone {
+    font-size: 12px;
+    color: var(--text-gray);
+}
+
+/* Botón de desbloqueo estético */
+.btn-outline-danger {
+    background: transparent;
+    color: #ff5252;
+    border: 1px solid #ff5252;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-outline-danger:hover {
+    background: #ff5252;
+    color: white;
+}
+
+/* Ajuste móvil */
+@media (max-width: 480px) {
+    .user-info img { width: 40px; height: 40px; }
+    .btn-outline-danger { padding: 5px 8px; font-size: 12px; }
+}
+
+/* Botón de flecha circular y estético */
+.btn-back-circle {
+    background: rgba(142, 45, 226, 0.1); /* Fondo morado muy suave */
+    border: 1px solid var(--primary-purple); /* Borde morado */
+    color: var(--primary-purple);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-back-circle:hover {
+    background: var(--primary-purple);
+    color: white;
+    box-shadow: 0 0 10px rgba(142, 45, 226, 0.5);
+    transform: translateX(-3px); /* Pequeño salto a la izquierda */
+}
+
+.btn-back-circle .material-icons {
+    font-size: 20px;
+}
+
+/* Estado de carga */
+.loading-state {
+    text-align: center;
+    padding: 30px;
+    color: var(--text-gray);
+    font-style: italic;
+}
+
+.header-left {
+    display: flex;
+    align-items: center; /* Esto centra verticalmente la flecha con el texto */
+    gap: 20px;           /* Espacio horizontal entre la flecha y el texto */
+    padding-top: 20px;   /* Esto empuja TODO el conjunto hacia abajo del borde superior */
+}
+
+.header-left h1 {
+    margin-top: 0px;           /* Quitamos márgenes por defecto para controlar el centro */
+    line-height: 1;      /* Ajusta la altura de línea para que no flote hacia arriba */
+    display: flex;
+    align-items: center;
+}
+
+/* Mejora adicional al botón circular para que no se pegue al techo */
+.btn-back-circle {
+    margin-top: 5px; 
+    /* ... resto de tu código ... */
+}
+
+#blockedListContainer .error, 
+.form-wrapper > p {
+    margin-top: 15px; /* Crea separación entre el título y el mensaje de error */
+    margin-left: 60px; /* Alinea el error con el inicio del texto "Bloqueados" */
+    color: #ff5252;
+}
+
+/* --- ESTILO DEL HEADER (EL TOQUE QUE PEDISTE) --- */
+.header-left {
+    display: flex;
+    align-items: center; /* Centra verticalmente la flecha con el texto */
+    gap: 20px;           /* Espacio para que no se vea pegado */
+    padding: 15px 0;
+}
+
+.btn-back-circle {
+    background: rgba(142, 45, 226, 0.1);
+    border: 1px solid #8e2de2;
+    color: #8e2de2;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-back-circle:hover {
+    background: #8e2de2;
+    color: white;
+    box-shadow: 0 0 12px rgba(142, 45, 226, 0.4);
+}
+
+.header-left h1 {
+    font-size: 24px;
+    margin: 0;
+    font-weight: 600;
+    /* Un pequeño ajuste manual si sientes que el texto sigue alto */
+    padding-top: 2px; 
+}
+
+/* --- DISEÑO DE TARJETAS (AJUSTES) --- */
+.settings-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
+    padding: 10px;
+}
+
+.settings-card.clickable {
+    background: #1e1e1e;
+    border: 1px solid #2a2a2a;
+    border-radius: 15px;
+    padding: 18px;
+    transition: 0.3s;
+    cursor: pointer;
+}
+
+.settings-card.clickable:hover {
+    border-color: #8e2de2;
+    background: #252525;
+    transform: translateY(-2px);
+}
+
+/* --- DISEÑO DE FILAS (DESCARGAS Y AJUSTES) --- */
+.setting-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    width: 100%;
+}
+
+.setting-details {
+    flex-grow: 1; /* Empuja el switch o la flecha a la derecha */
+}
+
+.profile-main {
+    background: linear-gradient(135deg, rgba(123, 47, 247, 0.1), rgba(166, 77, 255, 0.05));
+    border: 1px solid rgba(123, 47, 247, 0.3);
+}
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+    flex-wrap: wrap;
+}
+
+.avatar-edit {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.avatar-wrapper {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    overflow: hidden;
+    cursor: pointer;
+    border: 3px solid #7b2ff7;
+    transition: all 0.3s;
+}
+
+.avatar-wrapper:hover {
+    transform: scale(1.05);
+    border-color: #a64dff;
+}
+
+.profile-avatar {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s;
+    border-radius: 50%;
+}
+
+.avatar-overlay .material-icons {
+    color: white;
+    font-size: 32px;
+}
+
+.avatar-wrapper:hover .avatar-overlay {
+    opacity: 1;
+}
+
+.btn-camera {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    background: #7b2ff7;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    z-index: 10;
+}
+
+.btn-camera .material-icons {
+    color: white;
+    font-size: 18px;
+}
+
+.btn-camera:hover {
+    transform: scale(1.1);
+    background: #a64dff;
+}
+
+.profile-info {
+    flex: 1;
+}
+
+.profile-info h2 {
+    font-size: 24px;
+    margin: 0 0 5px 0;
+    color: white;
+}
+
+.profile-info p {
+    font-size: 14px;
+    color: #9c9ca6;
+    margin: 0 0 10px 0;
+}
+
+.edit-link {
+    background: rgba(123, 47, 247, 0.2);
+    color: #7b2ff7;
+    border: 1px solid #7b2ff7;
+    padding: 6px 15px;
+    border-radius: 20px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.edit-link:hover {
+    background: #7b2ff7;
+    color: white;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .profile-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .avatar-wrapper {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .btn-camera {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .btn-camera .material-icons {
+        font-size: 16px;
+    }
+    
+    .profile-info h2 {
+        font-size: 20px;
+    }
+}
+
+.setting-details h3 {
+    font-size: 16px;
+    margin: 0;
+    color: #fff;
+}
+
+.setting-details p {
+    font-size: 13px;
+    color: #aaa;
+    margin: 4px 0 0 0;
+}
+
+.profile-avatar {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    background: linear-gradient(135deg, #7b2ff7, #a64dff);
+}
+
+.profile-avatar[src=""] {
+    content: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%237b2ff7"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>');
+}
+
+/* --- ADAPTACIÓN PC (1024px+) --- */
+@media (min-width: 1024px) {
+    .settings-container {
+        grid-template-columns: repeat(2, 1fr); /* Dos columnas en PC */
+        max-width: 1100px;
+        margin: 0 auto;
+    }
+
+    .section-label {
+        grid-column: 1 / -1; /* Las etiquetas ocupan todo el ancho */
+        margin-top: 20px;
+        color: #8e2de2;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    /* Centrar el formulario de Descargas en PC */
+    .form-wrapper {
+        max-width: 600px;
+        margin: 40px auto;
+    }
+}
+.qr-section {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.qr-wrapper {
+    background: white;
+    padding: 15px;
+    display: inline-block;
+    border-radius: 12px;
+    margin-bottom: 10px;
+}
+
+.qr-caption {
+    font-size: 13px;
+    color: var(--text-gray);
+}
+
+.security-details-box {
+    background: rgba(142, 45, 226, 0.05);
+    border: 1px solid rgba(142, 45, 226, 0.2);
+    border-radius: 15px;
+    padding: 20px;
+}
+
+.detail-item {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.detail-item .material-icons {
+    color: var(--primary-purple);
+}
+
+.key-container {
+    background: #121212;
+    padding: 10px;
+    border-radius: 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    color: #8e2de2;
+    word-break: break-all;
+}
+
+.tone-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.btn-play {
+    background: var(--primary-purple);
+    border: none;
+    color: white;
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.wallpaper-selector {
+    margin-top: 10px;
+    border: 2px solid #333;
+    border-radius: 12px;
+    padding: 5px;
+}
+
+/* Botón de cerrar sesión */
+.logout-btn {
+    background: rgba(255, 68, 68, 0.1);
+    border: 1px solid #ff4444;
+    color: #ff4444;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.logout-btn:hover {
+    background: #ff4444;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.logout-section {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #333;
+}
+
+.setting-row.logout-row {
+    margin-top: 10px;
+}

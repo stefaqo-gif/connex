@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connex - Chats Archivados</title>
+    <link rel="stylesheet" href="/css/global.css">
+    <link rel="stylesheet" href="/css/archivados.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- Botón para abrir menú en móvil -->
+    <button class="menu-toggle" id="menuToggle">☰</button>
+    <div class="menu-overlay" id="menuOverlay"></div>
+
+    <div class="app-container">
+        <!-- Menú lateral izquierdo -->
+        <nav class="sidebar" id="sidebar">
+            <div class="logo">C</div>
+            <div class="nav-icons">
+                <span class="material-icons" onclick="location.href='chats.html'">chat</span>
+                <span class="material-icons" onclick="location.href='contactos.html'">group</span>
+                <span class="material-icons" onclick="location.href='chatsgrupos.html'">groups</span>
+                <span class="material-icons" onclick="location.href='estados.html'">visibility</span>
+            </div>
+            <div class="nav-bottom">
+                <span class="material-icons" onclick="location.href='ajustes.html'">settings</span>
+            </div>
+        </nav>
+
+        <!-- Contenido principal -->
+        <main class="content">
+            <header class="main-header">
+                <div class="header-back">
+                    <span class="material-icons" onclick="history.back()">arrow_back</span>
+                    <h1>Chats Archivados</h1>
+                </div>
+                <span class="archived-count" id="archivedCount">0 chats</span>
+            </header>
+
+            <div class="archived-container">
+                <!-- Mensaje informativo -->
+                <div class="info-message">
+                    <span class="material-icons">info</span>
+                    <p>Los chats archivados permanecerán archivados hasta que los desarchives o recibas un nuevo mensaje.</p>
+                </div>
+
+                <!-- Lista de chats archivados -->
+                <div class="archived-list" id="archivedList">
+                    <div class="empty-state">
+                        <div class="empty-icon">📦</div>
+                        <p>No hay chats archivados</p>
+                        <p class="empty-subtitle">Los chats que archives aparecerán aquí</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Variables globales
+        const userId = sessionStorage.getItem('usuarioId');
+        
+        if (!userId) {
+            window.location.href = '/registro';
+        }
+
+        console.log('ID de usuario:', userId);
+
+        // Función para generar iniciales del nombre
+        function getInitials(nombre) {
+            if (!nombre) return '?';
+            const palabras = nombre.trim().split(' ');
+            if (palabras.length === 1) {
+                return palabras[0].charAt(0).toUpperCase();
+            }
+            return (palabras[0].charAt(0) + palabras[palabras.length - 1].charAt(0)).toUpperCase();
+        }
+
+        // Función para obtener color de avatar basado en el nombre
+        function getAvatarColor(nombre) {
+            if (!nombre) return '#7b2ff7';
+            let hash = 0;
+            for (let i = 0; i < nombre.length; i++) {
+                hash = nombre.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            const hue = hash % 360;
+            return `hsl(${hue}, 70%, 60%)`;
+        }
+
+        // Función para formatear fechas
+        function formatearFecha(fecha) {
+            if (!fecha) return '';
+            const date = new Date(fecha);
+            const now = new Date();
+            const hoy = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const ayer = new Date(hoy);
+            ayer.setDate(ayer.getDate() - 1);
+            
+            if (date >= hoy) {
+                return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+            } else if (date >= ayer) {
+                return 'Ayer';
+            } else {
+                return date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
+            }
+        }
+
+        // Función para escapar HTML
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Desarchivar chat
+        async function desarchivarChat(chatId, esGrupo = false) {
+            try {
+                const response = await fetch('/archivar-chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: parseInt(userId),
+                        chatId: chatId,
+                        esGrupo: esGrupo,
+                        archivado: false
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    console.log('✅ Chat desarchivado correctamente');
+                    cargarArchivados();
+                    // Actualizar el contador en la página principal si es necesario
+                    if (window.opener) {
+                        window.opener.cargarChats();
+                    }
+                } else {
+                    alert(data.error || 'Error al desarchivar chat');
+                }
+            } catch (error) {
+                console.error('❌ Error:', error);
+                alert('Error de conexión');
+            }
+        }
+
+        // Eliminar chat archivado
+        async function eliminarChat(chatId, esGrupo = false) {
+            if (!confirm('¿Estás seguro de que quieres eliminar este chat? Esta acción eliminará todo el historial y no se puede deshacer.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/eliminar-chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: parseInt(userId),
+                        chatId: chatId,
+                        esGrupo: esGrupo
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert('Chat eliminado correctamente');
+                    cargarArchivados();
+                } else {
+                    alert(data.error || 'Error al eliminar chat');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error de conexión');
+            }
+        }
+
+        // Cargar chats archivados
+        function cargarArchivados() {
+            console.log('🔄 Cargando chats archivados...');
+            
+            fetch(`/chats-config/${userId}`)
+                .then(res => {
+                    if (!res.ok) throw new Error('Error al cargar chats');
+                    return res.json();
+                })
+                .then(chats => {
+                    console.log('📊 Todos los chats:', chats);
+                    
+                    const chatsArchivados = chats.filter(chat => chat.archivado === 1 || chat.archivado === true);
+                    console.log('📦 Chats archivados:', chatsArchivados);
+                    
+                    const archivedList = document.getElementById('archivedList');
+                    const archivedCount = document.getElementById('archivedCount');
+                    
+                    // Actualizar contador
+                    archivedCount.textContent = `${chatsArchivados.length} ${chatsArchivados.length === 1 ? 'chat' : 'chats'} archivado${chatsArchivados.length !== 1 ? 's' : ''}`;
+                    
+                    if (chatsArchivados.length === 0) {
+                        archivedList.innerHTML = `
+                            <div class="empty-state">
+                                <div class="empty-icon">📦</div>
+                                <p>No hay chats archivados</p>
+                                <p class="empty-subtitle">Los chats que archives aparecerán aquí</p>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    // Ordenar por fecha del último mensaje (más reciente primero)
+                    const chatsOrdenados = [...chatsArchivados].sort((a, b) => {
+                        return new Date(b.fecha_envio) - new Date(a.fecha_envio);
+                    });
+                    
+                    archivedList.innerHTML = chatsOrdenados.map(chat => {
+                        const tieneFoto = chat.foto_url && chat.foto_url !== 'null' && chat.foto_url !== 'undefined' && chat.foto_url !== '';
+                        const nombreEscapado = escapeHtml(chat.nombre);
+                        const iniciales = getInitials(chat.nombre);
+                        const avatarColor = getAvatarColor(chat.nombre);
+                        
+                        return `
+                            <div class="archived-chat-item" data-chat-id="${chat.chat_id}">
+                                <div class="chat-avatar-wrapper">
+                                    ${tieneFoto ? 
+                                        `<img src="${chat.foto_url}" class="chat-avatar" alt="${nombreEscapado}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` : 
+                                        ''
+                                    }
+                                    <div class="avatar-fallback" style="background-color: ${avatarColor}; display: ${tieneFoto ? 'none' : 'flex'}">
+                                        ${iniciales}
+                                    </div>
+                                </div>
+                                <div class="chat-info">
+                                    <div class="chat-name">${nombreEscapado}</div>
+                                    <div class="chat-preview">
+                                        ${chat.ultimo_mensaje ? `<span>${escapeHtml(chat.ultimo_mensaje.substring(0, 45))}</span>` : '<span>Sin mensajes</span>'}
+                                    </div>
+                                </div>
+                                <div class="chat-meta">
+                                    <div class="chat-time">${chat.fecha_envio ? formatearFecha(chat.fecha_envio) : ''}</div>
+                                </div>
+                                <div class="chat-actions">
+                                    <button class="action-btn unarchive-btn" onclick="desarchivarChat(${chat.chat_id}, false)" title="Desarchivar">
+                                        <span class="material-icons">unarchive</span>
+                                    </button>
+                                    <button class="action-btn delete-btn" onclick="eliminarChat(${chat.chat_id}, false)" title="Eliminar">
+                                        <span class="material-icons">delete</span>
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                    
+                    // Agregar estilos dinámicos para avatares si no existen
+                    if (!document.querySelector('#avatar-styles')) {
+                        const style = document.createElement('style');
+                        style.id = 'avatar-styles';
+                        style.textContent = `
+                            .chat-avatar-wrapper {
+                                position: relative;
+                                width: 50px;
+                                height: 50px;
+                                margin-right: 12px;
+                                flex-shrink: 0;
+                            }
+                            .chat-avatar {
+                                width: 100%;
+                                height: 100%;
+                                border-radius: 50%;
+                                object-fit: cover;
+                            }
+                            .avatar-fallback {
+                                width: 100%;
+                                height: 100%;
+                                border-radius: 50%;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                font-size: 18px;
+                                font-weight: bold;
+                                color: white;
+                                text-transform: uppercase;
+                            }
+                            @media (max-width: 768px) {
+                                .chat-avatar-wrapper {
+                                    width: 45px;
+                                    height: 45px;
+                                }
+                                .avatar-fallback {
+                                    font-size: 16px;
+                                }
+                            }
+                        `;
+                        document.head.appendChild(style);
+                    }
+                })
+                .catch(err => {
+                    console.error("❌ Error cargando archivados:", err);
+                    const archivedList = document.getElementById('archivedList');
+                    archivedList.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon">⚠️</div>
+                            <p>Error al cargar los chats archivados</p>
+                            <p class="empty-subtitle">Intenta recargar la página</p>
+                        </div>
+                    `;
+                });
+        }
+
+        // ==================== FUNCIONALIDAD DEL MENÚ MÓVIL ====================
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+        const menuOverlay = document.getElementById('menuOverlay');
+
+        function toggleMobileMenu() {
+            sidebar.classList.toggle('open');
+            menuOverlay.classList.toggle('active');
+        }
+
+        function closeMobileMenu() {
+            sidebar.classList.remove('open');
+            menuOverlay.classList.remove('active');
+        }
+
+        if (menuToggle) {
+            menuToggle.addEventListener('click', toggleMobileMenu);
+        }
+        if (menuOverlay) {
+            menuOverlay.addEventListener('click', closeMobileMenu);
+        }
+
+        // Cargar archivados al iniciar
+        cargarArchivados();
+        
+        // Recargar cada 30 segundos
+        setInterval(cargarArchivados, 30000);
+    </script>
+</body>
+
+</html>

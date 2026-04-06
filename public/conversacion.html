@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Connex - Conversación</title>
+    <link rel="stylesheet" href="/css/global.css">
+    <link rel="stylesheet" href="/css/conversacion.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+
+<body>
+
+    <div class="chat-container">
+        <!-- Header del chat -->
+        <header class="chat-header">
+            <div class="header-left">
+                <span class="material-icons back-btn" onclick="history.back()">arrow_back</span>
+                <div class="contact-info" id="contactInfo">
+                    <div class="contact-avatar-wrapper">
+                        <img id="contactAvatar" class="contact-avatar" src="/img/default-avatar.png" alt="Avatar">
+                        <div class="avatar-fallback" id="avatarFallback" style="display: none;"></div>
+                    </div>
+                    <div class="contact-details">
+                        <h2 id="contactName">Cargando...</h2>
+                        <span class="contact-status" id="contactStatus">
+                            <span class="status-dot"></span>
+                            <span id="statusText">En línea</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="header-right">
+                <span class="material-icons menu-btn" id="menuBtn">more_vert</span>
+                <div class="chat-menu-dropdown" id="chatMenuDropdown" style="display: none;">
+                    <button onclick="verInfoContacto()">
+                        <span class="material-icons">info</span>
+                        Información del contacto
+                    </button>
+                    <button onclick="buscarMensajes()">
+                        <span class="material-icons">search</span>
+                        Buscar mensajes
+                    </button>
+                    <button onclick="toggleNotificaciones()">
+                        <span class="material-icons">notifications_off</span>
+                        Silenciar notificaciones
+                    </button>
+                    <hr>
+                    <button onclick="eliminarHistorial()" class="danger">
+                        <span class="material-icons">delete_sweep</span>
+                        Eliminar historial
+                    </button>
+                    <button onclick="bloquearContacto()" class="danger">
+                        <span class="material-icons">block</span>
+                        Bloquear contacto
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Área de mensajes -->
+        <div class="messages-area" id="messagesArea">
+            <div class="messages-container" id="messagesContainer">
+                <!-- Los mensajes se cargarán aquí -->
+                <div class="loading-messages">
+                    <div class="spinner"></div>
+                    <p>Cargando mensajes...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Área de entrada de mensajes -->
+        <div class="input-area">
+            <div class="input-actions">
+                <button class="attach-btn" id="attachBtn" title="Adjuntar archivo">
+                    <span class="material-icons">attach_file</span>
+                </button>
+                <div class="attach-menu" id="attachMenu" style="display: none;">
+                    <button onclick="adjuntarImagen()">
+                        <span class="material-icons">image</span>
+                        Imagen
+                    </button>
+                    <button onclick="adjuntarDocumento()">
+                        <span class="material-icons">description</span>
+                        Documento
+                    </button>
+                    <button onclick="adjuntarAudio()">
+                        <span class="material-icons">mic</span>
+                        Audio
+                    </button>
+                    <button onclick="adjuntarUbicacion()">
+                        <span class="material-icons">location_on</span>
+                        Ubicación
+                    </button>
+                </div>
+            </div>
+            <div class="message-input-wrapper">
+                <textarea id="messageInput" placeholder="Escribe un mensaje..." rows="1"></textarea>
+                <button class="send-btn" id="sendBtn" disabled>
+                    <span class="material-icons">send</span>
+                </button>
+            </div>
+            <div class="emoji-btn" id="emojiBtn">
+                <span class="material-icons">sentiment_satisfied</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de información del contacto -->
+    <div class="modal" id="contactModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Información del contacto</h3>
+                <span class="close-modal" onclick="cerrarModal()">&times;</span>
+            </div>
+            <div class="modal-body" id="contactModalBody">
+                <!-- Contenido dinámico -->
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        // Variables globales
+        const userId = sessionStorage.getItem('usuarioId');
+        const urlParams = new URLSearchParams(window.location.search);
+        const chatId = urlParams.get('chatId');
+        const contactName = decodeURIComponent(urlParams.get('nombre') || 'Contacto');
+        
+        let contactInfo = null;
+        let socket = null;
+        let messages = [];
+        let currentPage = 0;
+        let isLoading = false;
+        let hasMore = true;
+        
+        if (!userId || !chatId) {
+            alert('Error: No se encontró información del chat');
+            window.location.href = '/chats';
+        }
+        
+        console.log('Iniciando conversación con:', contactName, 'ID:', chatId);
+        
+        // ==================== FUNCIONES DE AVATAR ====================
+        
+        function getInitials(nombre) {
+            if (!nombre) return '?';
+            const palabras = nombre.trim().split(' ');
+            if (palabras.length === 1) {
+                return palabras[0].charAt(0).toUpperCase();
+            }
+            return (palabras[0].charAt(0) + palabras[palabras.length - 1].charAt(0)).toUpperCase();
+        }
+        
+        function getAvatarColor(nombre) {
+            if (!nombre) return '#7b2ff7';
+            let hash = 0;
+            for (let i = 0; i < nombre.length; i++) {
+                hash = nombre.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            const hue = hash % 360;
+            return `hsl(${hue}, 70%, 60%)`;
+        }
+        
+        function actualizarAvatar(fotoUrl, nombre) {
+            const avatarImg = document.getElementById('contactAvatar');
+            const fallbackDiv = document.getElementById('avatarFallback');
+            
+            if (fotoUrl && fotoUrl !== 'null' && fotoUrl !== 'undefined' && fotoUrl !== '') {
+                avatarImg.src = fotoUrl;
+                avatarImg.style.display = 'block';
+                fallbackDiv.style.display = 'none';
+                avatarImg.onerror = function() {
+                    avatarImg.style.display = 'none';
+                    fallbackDiv.style.display = 'flex';
+                    fallbackDiv.textContent = getInitials(nombre);
+                    fallbackDiv.style.backgroundColor = getAvatarColor(nombre);
+                };
+            } else {
+                avatarImg.style.display = 'none';
+                fallbackDiv.style.display = 'flex';
+                fallbackDiv.textContent = getInitials(nombre);
+                fallbackDiv.style.backgroundColor = getAvatarColor(nombre);
+            }
+        }
+        
+        // ==================== FUNCIONES DE MENSAJES ====================
+        
+        // Escapar HTML
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Formatear fecha
+        function formatearFechaMensaje(fecha) {
+            const date = new Date(fecha);
+            const now = new Date();
+            const hoy = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const ayer = new Date(hoy);
+            ayer.setDate(ayer.getDate() - 1);
+            
+            if (date >= hoy) {
+                return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+            } else if (date >= ayer) {
+                return 'Ayer ' + date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+            } else {
+                return date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) + 
+                       ' ' + date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+            }
+        }
+        
+        // Renderizar mensaje individual
+        function renderMessage(msg, isOwn) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isOwn ? 'own' : 'other'}`;
+            messageDiv.id = `msg-${msg.id_mensaje}`;
+            
+            let contentHtml = '';
+            
+            // Contenido según tipo
+            switch(msg.tipo_mensaje) {
+                case 'texto':
+                    contentHtml = `<div class="message-text">${escapeHtml(msg.contenido_texto)}</div>`;
+                    break;
+                case 'imagen':
+                    contentHtml = `
+                        <div class="message-image" onclick="verImagen('${msg.contenido_texto}')">
+                            <img src="${msg.contenido_texto}" alt="Imagen">
+                        </div>
+                    `;
+                    break;
+                case 'documento':
+                    contentHtml = `
+                        <div class="message-file" onclick="descargarArchivo('${msg.contenido_texto}')">
+                            <span class="material-icons">description</span>
+                            <span>${msg.nombre_archivo || 'Documento'}</span>
+                        </div>
+                    `;
+                    break;
+                case 'audio':
+                    contentHtml = `
+                        <div class="message-audio">
+                            <audio controls src="${msg.contenido_texto}"></audio>
+                        </div>
+                    `;
+                    break;
+                case 'ubicacion':
+                    contentHtml = `
+                        <div class="message-location" onclick="verUbicacion('${msg.contenido_texto}')">
+                            <span class="material-icons">location_on</span>
+                            <span>Ver ubicación</span>
+                        </div>
+                    `;
+                    break;
+                default:
+                    contentHtml = `<div class="message-text">${escapeHtml(msg.contenido_texto)}</div>`;
+            }
+            
+            const estadoHtml = isOwn ? `
+                <div class="message-status">
+                    ${msg.leido ? '<span class="material-icons read">done_all</span>' : '<span class="material-icons sent">done</span>'}
+                </div>
+            ` : '';
+            
+            messageDiv.innerHTML = `
+                ${!isOwn ? `<div class="message-avatar">
+                    <img src="${contactInfo?.foto_url || ''}" onerror="this.style.display='none'; this.parentElement.innerHTML='${getInitials(contactInfo?.nombre_usuario || contactName)}'">
+                </div>` : ''}
+                <div class="message-bubble">
+                    ${contentHtml}
+                    <div class="message-time">
+                        ${formatearFechaMensaje(msg.fecha_envio)}
+                        ${estadoHtml}
+                    </div>
+                </div>
+            `;
+            
+            return messageDiv;
+        }
+        
+        // Cargar mensajes
+        async function cargarMensajes(loadMore = false) {
+            if (isLoading) return;
+            isLoading = true;
+            
+            try {
+                const response = await fetch(`/mensajes/${userId}/${chatId}?page=${currentPage}&limit=30`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const nuevosMensajes = data.mensajes || [];
+                    
+                    if (loadMore) {
+                        messages = [...nuevosMensajes.reverse(), ...messages];
+                    } else {
+                        messages = nuevosMensajes.reverse();
+                    }
+                    
+                    hasMore = data.hasMore;
+                    
+                    if (!loadMore) {
+                        // Limpiar contenedor
+                        document.getElementById('messagesContainer').innerHTML = '';
+                    }
+                    
+                    // Agregar separadores de fecha
+                    let lastDate = null;
+                    const container = document.getElementById('messagesContainer');
+                    
+                    messages.forEach(msg => {
+                        const msgDate = new Date(msg.fecha_envio).toDateString();
+                        if (lastDate !== msgDate) {
+                            const dateDiv = document.createElement('div');
+                            dateDiv.className = 'date-separator';
+                            dateDiv.textContent = formatearFechaSeparador(msg.fecha_envio);
+                            container.appendChild(dateDiv);
+                            lastDate = msgDate;
+                        }
+                        
+                        const isOwn = msg.id_emisor == userId;
+                        const messageElement = renderMessage(msg, isOwn);
+                        container.appendChild(messageElement);
+                    });
+                    
+                    // Scroll al último mensaje
+                    if (!loadMore) {
+                        setTimeout(() => {
+                            const container = document.getElementById('messagesContainer');
+                            container.scrollTop = container.scrollHeight;
+                        }, 100);
+                    }
+                }
+            } catch (error) {
+                console.error('Error cargando mensajes:', error);
+            } finally {
+                isLoading = false;
+            }
+        }
+        
+        // Enviar mensaje
+        async function enviarMensaje() {
+            const input = document.getElementById('messageInput');
+            const texto = input.value.trim();
+            
+            if (!texto) return;
+            
+            const sendBtn = document.getElementById('sendBtn');
+            sendBtn.disabled = true;
+            
+            try {
+                const response = await fetch('/enviar-mensaje', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        emisorId: parseInt(userId),
+                        receptorId: parseInt(chatId),
+                        contenido: texto,
+                        tipo: 'texto'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    input.value = '';
+                    ajustarAlturaInput();
+                    cargarMensajes();
+                } else {
+                    alert(data.error || 'Error al enviar mensaje');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error de conexión');
+            } finally {
+                sendBtn.disabled = false;
+            }
+        }
+        
+        // Ajustar altura del textarea automáticamente
+        function ajustarAlturaInput() {
+            const textarea = document.getElementById('messageInput');
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, 100) + 'px';
+        }
+        
+        // ==================== FUNCIONES DE CONTACTO ====================
+        
+        // Cargar información del contacto
+        async function cargarInfoContacto() {
+            try {
+                const response = await fetch(`/usuario/${chatId}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    contactInfo = data;
+                    document.getElementById('contactName').textContent = data.nombre_usuario || contactName;
+                    actualizarAvatar(data.foto_url, data.nombre_usuario || contactName);
+                    
+                    // Actualizar estado
+                    const statusText = document.getElementById('statusText');
+                    if (data.info_estado) {
+                        statusText.textContent = data.info_estado;
+                    } else {
+                        statusText.textContent = 'En línea';
+                    }
+                }
+            } catch (error) {
+                console.error('Error cargando contacto:', error);
+                document.getElementById('contactName').textContent = contactName;
+                actualizarAvatar(null, contactName);
+            }
+        }
+        
+        // Ver información del contacto
+        function verInfoContacto() {
+            const modalBody = document.getElementById('contactModalBody');
+            modalBody.innerHTML = `
+                <div class="contact-info-modal">
+                    <div class="modal-avatar">
+                        <img src="${contactInfo?.foto_url || ''}" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'avatar-fallback-large\'>${getInitials(contactInfo?.nombre_usuario || contactName)}</div>'">
+                    </div>
+                    <div class="modal-details">
+                        <p><strong>Nombre:</strong> ${escapeHtml(contactInfo?.nombre_usuario || contactName)}</p>
+                        <p><strong>Teléfono:</strong> ${contactInfo?.telefono || 'No disponible'}</p>
+                        <p><strong>Correo:</strong> ${contactInfo?.correo || 'No disponible'}</p>
+                        <p><strong>Estado:</strong> ${escapeHtml(contactInfo?.info_estado || 'Sin estado')}</p>
+                    </div>
+                </div>
+            `;
+            document.getElementById('contactModal').style.display = 'flex';
+        }
+        
+        // Eliminar historial
+        async function eliminarHistorial() {
+            if (!confirm('¿Estás seguro de que quieres eliminar todo el historial de mensajes con este contacto?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/eliminar-historial', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: parseInt(userId),
+                        chatId: parseInt(chatId),
+                        esGrupo: false
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert('Historial eliminado correctamente');
+                    messages = [];
+                    document.getElementById('messagesContainer').innerHTML = '';
+                    cargarMensajes();
+                } else {
+                    alert(data.error || 'Error al eliminar historial');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error de conexión');
+            }
+        }
+        
+        // Bloquear contacto
+        function bloquearContacto() {
+            if (confirm('¿Estás seguro de que quieres bloquear este contacto? No podrás recibir mensajes de él/ella.')) {
+                alert('Función en desarrollo');
+                // Implementar bloqueo
+            }
+        }
+        
+        // Silenciar notificaciones
+        function toggleNotificaciones() {
+            alert('Función en desarrollo');
+        }
+        
+        // Buscar mensajes
+        function buscarMensajes() {
+            alert('Función en desarrollo');
+        }
+        
+        // Adjuntar imagen
+        function adjuntarImagen() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    // Procesar imagen
+                    const reader = new FileReader();
+                    reader.onload = async (event) => {
+                        const imageData = event.target.result;
+                        // Enviar imagen
+                        try {
+                            const response = await fetch('/enviar-mensaje', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    emisorId: parseInt(userId),
+                                    receptorId: parseInt(chatId),
+                                    contenido: imageData,
+                                    tipo: 'imagen'
+                                })
+                            });
+                            
+                            if (response.ok) {
+                                cargarMensajes();
+                            }
+                        } catch (error) {
+                            console.error('Error:', error);
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+            input.click();
+            document.getElementById('attachMenu').style.display = 'none';
+        }
+        
+        function adjuntarDocumento() {
+            alert('Función en desarrollo');
+        }
+        
+        function adjuntarAudio() {
+            alert('Función en desarrollo');
+        }
+        
+        function adjuntarUbicacion() {
+            alert('Función en desarrollo');
+        }
+        
+        function cerrarModal() {
+            document.getElementById('contactModal').style.display = 'none';
+        }
+        
+        // ==================== EVENTOS ====================
+        
+        // Manejar envío de mensaje
+        document.getElementById('sendBtn').addEventListener('click', enviarMensaje);
+        document.getElementById('messageInput').addEventListener('input', () => {
+            const input = document.getElementById('messageInput');
+            const sendBtn = document.getElementById('sendBtn');
+            sendBtn.disabled = !input.value.trim();
+            ajustarAlturaInput();
+        });
+        
+        document.getElementById('messageInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                enviarMensaje();
+            }
+        });
+        
+        // Menú de chat
+        const menuBtn = document.getElementById('menuBtn');
+        const menuDropdown = document.getElementById('chatMenuDropdown');
+        
+        menuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            menuDropdown.style.display = menuDropdown.style.display === 'none' ? 'block' : 'none';
+        });
+        
+        document.addEventListener('click', () => {
+            menuDropdown.style.display = 'none';
+        });
+        
+        // Menú de adjuntar
+        const attachBtn = document.getElementById('attachBtn');
+        const attachMenu = document.getElementById('attachMenu');
+        
+        attachBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            attachMenu.style.display = attachMenu.style.display === 'none' ? 'block' : 'none';
+        });
+        
+        document.addEventListener('click', () => {
+            attachMenu.style.display = 'none';
+        });
+        
+        // Scroll infinito para cargar más mensajes
+        const messagesArea = document.getElementById('messagesArea');
+        messagesArea.addEventListener('scroll', () => {
+            if (messagesArea.scrollTop === 0 && hasMore && !isLoading) {
+                currentPage++;
+                cargarMensajes(true);
+            }
+        });
+        
+        // ==================== INICIALIZACIÓN ====================
+        
+        cargarInfoContacto();
+        cargarMensajes();
+        
+        // Conectar WebSocket para mensajes en tiempo real
+        socket = io();
+        socket.emit('join', { userId: userId });
+        
+        socket.on('new_message', (message) => {
+            if (message.id_emisor == chatId || message.id_receptor_usuario == chatId) {
+                cargarMensajes();
+            }
+        });
+        
+        // Recargar cada 5 segundos (fallback)
+        setInterval(() => {
+            cargarMensajes();
+        }, 5000);
+        
+        // Cerrar modal al hacer clic fuera
+        window.onclick = (event) => {
+            const modal = document.getElementById('contactModal');
+            if (event.target === modal) {
+                cerrarModal();
+            }
+        };
+    </script>
+</body>
+
+</html>

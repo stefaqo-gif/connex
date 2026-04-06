@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connex - Registro</title>
+    <link rel="stylesheet" href="/css/registro.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+
+<body>
+
+    <div class="card">
+        <!-- Flecha para retroceder -->
+        <div class="back-button">
+            <a href="/" class="back-arrow">
+                <span class="material-icons">arrow_back</span>
+            </a>
+        </div>
+
+        <div class="logo">
+            <div class="circle">💬</div>
+        </div>
+
+        <h1>Connex</h1>
+        <p class="subtitle">Ingresa tus datos para registrarte</p>
+
+        <form id="formTelefono">
+            <label>País</label>
+            <select id="pais" class="input" required>
+                <option value="">Selecciona un país</option>
+            </select>
+
+            <label>Número telefónico</label>
+            <div class="telefono">
+                <input type="text" id="codigo" class="codigo" placeholder="+506" readonly>
+                <input type="tel" id="numero" class="numero" placeholder="8888 8888" required pattern="[0-9\s]+" title="Solo números y espacios">
+            </div>
+
+            <label>Correo electrónico</label>
+            <input type="email" id="correo" class="input" placeholder="tucorreo@ejemplo.com" required>
+
+            <button type="submit" id="btnEnviar">
+                Enviar código
+            </button>
+        </form>
+    </div>
+
+    <script>
+        // 1. Cargar países desde el servidor
+        fetch('/paises')
+            .then(response => response.json())
+            .then(data => {
+                const select = document.getElementById('pais');
+                data.forEach(pais => {
+                    const option = document.createElement('option');
+                    option.value = pais.id_pais;
+                    option.dataset.codigo = pais.codigo_area;
+                    option.textContent = `${pais.nombre} (${pais.codigo_area})`;
+                    select.appendChild(option);
+                });
+            });
+
+        // 2. Cambiar el prefijo del teléfono automáticamente
+        document.getElementById("pais").addEventListener("change", function() {
+            const selectedOption = this.options[this.selectedIndex];
+            document.getElementById("codigo").value = selectedOption ? (selectedOption.dataset.codigo || '') : '';
+        });
+
+        // 3. Enviar formulario al servidor usando /enviar-codigo
+        document.getElementById("formTelefono").addEventListener("submit", async function(e) {
+            e.preventDefault();
+
+            const btnEnviar = document.getElementById('btnEnviar');
+            btnEnviar.disabled = true;
+            btnEnviar.textContent = 'Enviando...';
+
+            const idPais = document.getElementById('pais').value;
+            const codigoPais = document.getElementById('codigo').value;
+            const numeroSimple = document.getElementById('numero').value.replace(/\s/g, '');
+            const correo = document.getElementById('correo').value.trim();
+            
+            if (!idPais) {
+                alert('Por favor selecciona un país');
+                btnEnviar.disabled = false;
+                btnEnviar.textContent = 'Enviar código';
+                return;
+            }
+            
+            if (!numeroSimple) {
+                alert('Por favor ingresa un número telefónico');
+                btnEnviar.disabled = false;
+                btnEnviar.textContent = 'Enviar código';
+                return;
+            }
+            
+            if (!correo) {
+                alert('Por favor ingresa un correo electrónico');
+                btnEnviar.disabled = false;
+                btnEnviar.textContent = 'Enviar código';
+                return;
+            }
+            
+            const telefonoCompleto = codigoPais + numeroSimple;
+
+            try {
+                // Usar /enviar-codigo en lugar de /registrar-usuario
+                const response = await fetch('/enviar-codigo', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        telefono: telefonoCompleto,
+                        idPais: idPais,
+                        correo: correo
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    sessionStorage.setItem('telefonoVerificacion', telefonoCompleto);
+                    sessionStorage.setItem('correoVerificacion', correo);
+                    window.location.href = '/verificacion';
+                } else {
+                    alert(data.error || 'Error al enviar el código');
+                    btnEnviar.disabled = false;
+                    btnEnviar.textContent = 'Enviar código';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error de conexión con el servidor');
+                btnEnviar.disabled = false;
+                btnEnviar.textContent = 'Enviar código';
+            }
+        });
+    </script>
+</body>
+
+</html>

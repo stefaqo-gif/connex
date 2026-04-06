@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificar Código - Connex Admin</title>
+    <link rel="stylesheet" href="/css/verificacionadmin.css">
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="logo">
+            <div class="circle">💬</div>
+            <span>Connex</span>
+            <span class="admin-badge">Admin</span>
+        </div>
+
+        <h1>Verificación de cuenta</h1>
+
+        <p class="subtitulo">
+            Ingresa el código enviado a tu correo electrónico
+        </p>
+
+        <div class="code-container">
+            <input type="text" maxlength="1" class="code-input" id="code1" autofocus>
+            <input type="text" maxlength="1" class="code-input" id="code2">
+            <input type="text" maxlength="1" class="code-input" id="code3">
+            <input type="text" maxlength="1" class="code-input" id="code4">
+            <input type="text" maxlength="1" class="code-input" id="code5">
+        </div>
+
+        <button class="btn-verify" id="verifyBtn">Verificar</button>
+
+        <div class="actions">
+            <button class="btn-resend" id="resendBtn">Reenviar código</button>
+            <a href="/admin" class="btn-logout">Salir</a>
+        </div>
+    </div>
+
+    <script>
+    // Obtener email de la URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const email = urlParams.get('email');
+    
+    console.log('📧 Email desde URL:', email);
+
+    if (!email) {
+        alert('No se encontró el correo electrónico. Por favor, inicia sesión nuevamente.');
+        window.location.href = '/admin';
+    }
+
+    // Auto-focus y navegación entre inputs
+    const inputs = document.querySelectorAll('.code-input');
+
+    inputs.forEach((input, index) => {
+        input.addEventListener('input', (e) => {
+            if (e.target.value.length === 1 && index < inputs.length - 1) {
+                inputs[index + 1].focus();
+            }
+        });
+
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                inputs[index - 1].focus();
+            }
+        });
+    });
+
+    // Mostrar mensaje de error
+    function showError(message) {
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error-message';
+        errorDiv.style.cssText = `
+            background: #ff4444;
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 15px;
+            text-align: center;
+            animation: fadeIn 0.3s;
+        `;
+        errorDiv.textContent = message;
+        
+        const container = document.querySelector('.container');
+        const existingError = container.querySelector('.error-message');
+        if (existingError) existingError.remove();
+        container.appendChild(errorDiv);
+        
+        setTimeout(() => {
+            errorDiv.remove();
+        }, 5000);
+    }
+
+    // Verificar código
+    document.getElementById('verifyBtn').addEventListener('click', async () => {
+        const code = Array.from(inputs).map(input => input.value).join('');
+        
+        console.log('🔑 Código ingresado:', code);
+        console.log('📧 Email:', email);
+
+        if (code.length !== 5) {
+            showError('Por favor ingresa el código completo de 5 dígitos');
+            return;
+        }
+
+        // Deshabilitar botón mientras se procesa
+        const verifyBtn = document.getElementById('verifyBtn');
+        const originalText = verifyBtn.textContent;
+        verifyBtn.textContent = 'Verificando...';
+        verifyBtn.disabled = true;
+
+        try {
+            console.log('📡 Enviando petición a /admin/verificacionadmin...');
+            
+            const response = await fetch('/admin/verificacionadmin', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email, code })
+            });
+            
+            console.log('📥 Respuesta recibida. Status:', response.status);
+            
+            const data = await response.json();
+            console.log('📦 Datos de respuesta:', data);
+
+            if (response.ok) {
+                if (data.success) {
+                    console.log('✅ Verificación exitosa, redirigiendo a:', data.redirectUrl);
+                   window.location.href = '/admin/reportes';
+                } else {
+                    showError(data.message || 'Código incorrecto');
+                    inputs.forEach(input => input.value = '');
+                    inputs[0].focus();
+                }
+            } else {
+                showError(data.message || 'Error en la verificación');
+                inputs.forEach(input => input.value = '');
+                inputs[0].focus();
+            }
+        } catch (error) {
+            console.error('❌ Error detallado:', error);
+            console.error('❌ Error message:', error.message);
+            showError('Error de conexión: ' + error.message);
+        } finally {
+            // Rehabilitar botón
+            verifyBtn.textContent = originalText;
+            verifyBtn.disabled = false;
+        }
+    });
+
+    // Reenviar código
+    document.getElementById('resendBtn').addEventListener('click', async () => {
+        const resendBtn = document.getElementById('resendBtn');
+        const originalText = resendBtn.textContent;
+        resendBtn.textContent = 'Enviando...';
+        resendBtn.disabled = true;
+        
+        try {
+            console.log('🔄 Reenviando código para:', email);
+            
+            const response = await fetch('/admin/resend-code', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email })
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                alert('✅ Código reenviado exitosamente a tu correo');
+            } else {
+                alert('❌ ' + (data.message || 'Error al reenviar código'));
+            }
+        } catch (error) {
+            console.error('❌ Error al reenviar:', error);
+            alert('Error de conexión: ' + error.message);
+        } finally {
+            resendBtn.textContent = originalText;
+            resendBtn.disabled = false;
+        }
+    });
+</script>
+</body>
+
+</html>

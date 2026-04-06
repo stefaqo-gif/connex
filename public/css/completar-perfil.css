@@ -1,0 +1,197 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #0f0f14;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.card {
+    background: #1a1a22;
+    width: 100%;
+    max-width: 500px;
+    padding: 40px;
+    border-radius: 22px;
+    box-shadow: 0 0 70px rgba(140, 70, 255, 0.35);
+}
+
+.logo {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.circle {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 15px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 28px;
+    color: white;
+    background: linear-gradient(135deg, #7b2ff7, #a64dff);
+}
+
+h1 {
+    color: white;
+    font-size: 28px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.subtitle {
+    color: #9c9ca6;
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 14px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    color: #9c9ca6;
+    font-weight: 500;
+    font-size: 13px;
+}
+
+.input, select {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #2a2a32;
+    border-radius: 12px;
+    font-size: 15px;
+    background: #0f0f14;
+    color: white;
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+.input:focus, select:focus {
+    outline: none;
+    border-color: #7b2ff7;
+    box-shadow: 0 0 0 3px rgba(123, 47, 247, 0.2);
+}
+
+.telefono {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.codigo {
+    width: 100px;
+    padding: 12px;
+    border: 2px solid #2a2a32;
+    border-radius: 12px;
+    background: #0f0f14;
+    color: white;
+    text-align: center;
+}
+
+.numero {
+    flex: 1;
+    padding: 12px;
+    border: 2px solid #2a2a32;
+    border-radius: 12px;
+    background: #0f0f14;
+    color: white;
+}
+
+.foto-container {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.foto-preview {
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 10px;
+    border-radius: 50%;
+    background: #0f0f14;
+    border: 2px solid #2a2a32;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    overflow: hidden;
+}
+
+.btn-secundario {
+    background: transparent;
+    border: 2px solid #7b2ff7;
+    color: #7b2ff7;
+    padding: 8px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.btn-secundario:hover {
+    background: #7b2ff7;
+    color: white;
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.checkbox-group input {
+    width: auto;
+    margin: 0;
+}
+
+.checkbox-group label {
+    margin: 0;
+    font-size: 13px;
+}
+
+button[type="submit"] {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(90deg, #7b2ff7, #a64dff);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+button[type="submit"]:hover:not(:disabled) {
+    transform: translateY(-2px);
+    opacity: 0.9;
+}
+
+button[type="submit"]:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+    .card {
+        padding: 30px 20px;
+    }
+    
+    .telefono {
+        flex-direction: column;
+    }
+    
+    .codigo {
+        width: 100%;
+    }
+}

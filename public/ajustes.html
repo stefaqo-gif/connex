@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ConneX - Ajustes</title>
+    <link rel="stylesheet" href="/css/global.css">
+    <link rel="stylesheet" href="/css/ajustes.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <nav class="sidebar">
+            <div class="logo">C</div>
+            <div class="nav-icons">
+                <span class="material-icons" onclick="location.href='chats.html'">chat</span>
+                <span class="material-icons" onclick="location.href='contactos.html'">group</span>
+                <span class="material-icons" onclick="location.href='grupos.html'">groups</span>
+                <span class="material-icons" onclick="location.href='estados.html'">visibility</span>
+            </div>
+            <div class="nav-bottom">
+                <span class="material-icons active">settings</span>
+            </div>
+        </nav>
+
+        <main class="content">
+            <header class="main-header">
+                <h1>Ajustes</h1>
+            </header>
+
+            <div class="settings-container">
+                
+                <section class="settings-card profile-main">
+                    <div class="profile-header">
+                        <div class="avatar-edit">
+                            <div class="avatar-wrapper">
+                                <img src="/img/default-avatar.png" alt="Perfil" id="profileAvatar" class="profile-avatar">
+                                <div class="avatar-overlay" id="avatarOverlay">
+                                    <span class="material-icons">camera_alt</span>
+                                </div>
+                            </div>
+                            <label for="uploadPhoto" class="btn-camera" id="cameraBtn">
+                                <span class="material-icons">photo_camera</span>
+                            </label>
+                            <input type="file" id="uploadPhoto" hidden accept="image/*">
+                        </div>
+                        <div class="profile-info">
+                            <h2 id="profileName">Cargando...</h2>
+                            <p id="profilePhone">Cargando...</p>
+                            <button class="edit-link" id="editProfile">Editar perfil</button>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="section-label">
+                    <span class="material-icons">security</span> Privacidad y Seguridad
+                </div>
+
+                <section class="settings-card clickable" onclick="location.href='cifrado.html'">
+                    <div class="setting-row">
+                        <div class="icon-circle"><span class="material-icons">qr_code_2</span></div>
+                        <div class="setting-details">
+                            <h3>Código QR de Cifrado</h3>
+                            <p>Verificar seguridad RSA-2048</p>
+                        </div>
+                        <span class="material-icons chevron">chevron_right</span>
+                    </div>
+                </section>
+
+                <section class="settings-card">
+                    <div class="setting-row">
+                        <div class="icon-circle"><span class="material-icons">lock</span></div>
+                        <div class="setting-details">
+                            <h3>Privacidad de foto</h3>
+                            <select id="privacidadFoto" class="dark-select">
+                                <option value="Todos">Todos</option>
+                                <option value="Contactos">Mis contactos</option>
+                                <option value="Nadie">Nadie</option>
+                            </select>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="section-label">
+                    <span class="material-icons">palette</span> Personalización y Descargas
+                </div>
+
+                <section class="settings-card">
+                    <div class="setting-row">
+                        <div class="icon-circle"><span class="material-icons">download</span></div>
+                        <div class="setting-details">
+                            <h3>Descarga automática</h3>
+                            <select id="descargaAuto" class="dark-select">
+                                <option value="Wifi">Solo Wi-Fi</option>
+                                <option value="Datos">Solo datos móviles</option>
+                                <option value="Ambos">Wi-Fi y datos móviles</option>
+                                <option value="Nunca">Nunca</option>
+                            </select>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="section-label">
+                    <span class="material-icons">account_circle</span> Gestión de Cuenta
+                </div>
+
+                <section class="settings-card">
+                    <div class="setting-row">
+                        <div class="setting-details">
+                            <h3 style="color: #ff4444;">Eliminar mi cuenta</h3>
+                            <p>Esta acción no se puede deshacer</p>
+                        </div>
+                        <button class="edit-link" id="deleteAccount" style="color: #ff4444;">Eliminar</button>
+                    </div>
+                </section>
+
+                <!-- Sección de Cerrar Sesión -->
+                <div class="section-label">
+                    <span class="material-icons">logout</span> Sesión
+                </div>
+
+                <section class="settings-card">
+                    <div class="setting-row">
+                        <div class="icon-circle"><span class="material-icons">exit_to_app</span></div>
+                        <div class="setting-details">
+                            <h3>Cerrar sesión</h3>
+                            <p>Salir de tu cuenta actual</p>
+                        </div>
+                        <button class="edit-link" id="logoutBtn" style="color: #ff4444;">Cerrar sesión</button>
+                    </div>
+                </section>
+
+            </div> 
+        </main>
+    </div>
+    
+    <script src="/js/verificar-sesion.js"></script>
+    <script>
+        const userId = sessionStorage.getItem('usuarioId');
+        
+        if (!userId) {
+            window.location.href = '/login';
+        }
+
+        // Función para comprimir imagen
+        function comprimirImagen(file, maxSizeMB = 0.5, callback) {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = function(event) {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+                    
+                    const maxWidth = 300;
+                    const maxHeight = 300;
+                    
+                    if (width > maxWidth) {
+                        height = (height * maxWidth) / width;
+                        width = maxWidth;
+                    }
+                    if (height > maxHeight) {
+                        width = (width * maxHeight) / height;
+                        height = maxHeight;
+                    }
+                    
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    let quality = 0.7;
+                    let dataUrl = canvas.toDataURL('image/jpeg', quality);
+                    let sizeInMB = (dataUrl.length * 0.75) / (1024 * 1024);
+                    
+                    while (sizeInMB > maxSizeMB && quality > 0.1) {
+                        quality -= 0.1;
+                        dataUrl = canvas.toDataURL('image/jpeg', quality);
+                        sizeInMB = (dataUrl.length * 0.75) / (1024 * 1024);
+                    }
+                    
+                    callback(dataUrl);
+                };
+            };
+        }
+
+        // Cargar datos del usuario
+        async function cargarDatosUsuario() {
+            try {
+                const response = await fetch(`/usuario/${userId}`);
+                const user = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('profileName').textContent = user.nombre_usuario;
+                    document.getElementById('profilePhone').textContent = user.telefono;
+                    
+                    const avatarImg = document.getElementById('profileAvatar');
+                    if (user.foto_url && user.foto_url !== 'null' && user.foto_url !== 'undefined') {
+                        avatarImg.src = user.foto_url;
+                    } else {
+                        avatarImg.src = '/img/default-avatar.png';
+                    }
+                    
+                    if (user.privacidad_foto) {
+                        document.getElementById('privacidadFoto').value = user.privacidad_foto;
+                    }
+                    if (user.descarga_auto) {
+                        document.getElementById('descargaAuto').value = user.descarga_auto;
+                    }
+                }
+            } catch (error) {
+                console.error('Error cargando usuario:', error);
+            }
+        }
+
+        // Actualizar foto de perfil
+        async function actualizarFotoPerfil(fotoBase64) {
+            try {
+                const response = await fetch('/actualizar-perfil', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: parseInt(userId),
+                        nombreUsuario: document.getElementById('profileName').textContent,
+                        correo: sessionStorage.getItem('userEmail') || '',
+                        fotoUrl: fotoBase64,
+                        infoEstado: sessionStorage.getItem('userStatus') || '¡Hola! Estoy usando ConneX.',
+                        privacidadFoto: document.getElementById('privacidadFoto').value,
+                        descargaAuto: document.getElementById('descargaAuto').value
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert('Foto de perfil actualizada correctamente');
+                    document.getElementById('profileAvatar').src = fotoBase64;
+                } else {
+                    alert(data.error || 'Error al actualizar foto');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error de conexión');
+            }
+        }
+
+        // Manejar cambio de foto
+        document.getElementById('uploadPhoto').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    document.getElementById('profileAvatar').src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+                
+                comprimirImagen(file, 0.3, function(fotoComprimida) {
+                    actualizarFotoPerfil(fotoComprimida);
+                });
+            } else {
+                alert('Por favor selecciona una imagen válida');
+            }
+        });
+
+        // Editar perfil
+        document.getElementById('editProfile').addEventListener('click', () => {
+            window.location.href = `/completar-perfil?edit=true&userId=${userId}`;
+        });
+
+        // Eliminar cuenta
+        document.getElementById('deleteAccount').addEventListener('click', async () => {
+            if (confirm('⚠️ ADVERTENCIA: Esta acción eliminará permanentemente tu cuenta y todos tus datos. ¿Estás absolutamente seguro?')) {
+                const confirmText = prompt('Escribe "ELIMINAR" para confirmar:');
+                if (confirmText === 'ELIMINAR') {
+                    try {
+                        const response = await fetch('/eliminar-cuenta', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ userId: parseInt(userId) })
+                        });
+                        
+                        if (response.ok) {
+                            alert('Cuenta eliminada correctamente');
+                            sessionStorage.clear();
+                            window.location.href = '/';
+                        } else {
+                            const data = await response.json();
+                            alert(data.error || 'Error al eliminar cuenta');
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        alert('Error de conexión');
+                    }
+                } else {
+                    alert('Confirmación incorrecta');
+                }
+            }
+        });
+
+        // Cerrar sesión
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+                sessionStorage.clear();
+                window.location.href = '/login';
+            }
+        });
+
+        // Guardar configuración cuando cambien los selects
+        document.getElementById('privacidadFoto').addEventListener('change', async () => {
+            try {
+                const response = await fetch('/actualizar-privacidad', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: parseInt(userId),
+                        privacidadFoto: document.getElementById('privacidadFoto').value
+                    })
+                });
+                
+                if (response.ok) {
+                    alert('Privacidad actualizada');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+
+        document.getElementById('descargaAuto').addEventListener('change', async () => {
+            try {
+                const response = await fetch('/actualizar-descarga', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: parseInt(userId),
+                        descargaAuto: document.getElementById('descargaAuto').value
+                    })
+                });
+                
+                if (response.ok) {
+                    alert('Configuración de descarga actualizada');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+
+        // Inicializar
+        cargarDatosUsuario();
+    </script>
+</body>
+</html>

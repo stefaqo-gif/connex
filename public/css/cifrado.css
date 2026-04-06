@@ -1,0 +1,232 @@
+/* --- LAYOUT DE CENTRADO --- */
+.centered-layout {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    width: 100%;
+    background-color: #000;
+    padding: 20px;
+    font-family: 'Roboto', sans-serif;
+}
+
+/* --- LA TARJETA (ESTILO PREMIUM DARK) --- */
+.module-card {
+    width: 100%;
+    max-width: 450px;
+    background: #121212;
+    border-radius: 28px;
+    padding: 30px;
+    border: 1px solid #2a2a2a;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+}
+
+/* --- CABECERA --- */
+.module-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.btn-back-circle {
+    background: rgba(142, 45, 226, 0.1);
+    border: 1px solid #8e2de2;
+    color: #8e2de2;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-back-circle:hover {
+    background: #8e2de2;
+    color: white;
+    transform: scale(1.05);
+}
+
+.module-header h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+    color: white;
+}
+
+/* --- SECCIÓN QR CON LOADER (Inciso c) --- */
+.qr-section {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.qr-frame {
+    background: white;
+    padding: 15px;
+    border-radius: 20px;
+    display: inline-block;
+    position: relative;
+    min-width: 200px;
+    min-height: 200px;
+}
+
+.qr-frame img {
+    display: block;
+    width: 200px;
+    height: 200px;
+    border-radius: 10px;
+}
+
+.loader-overlay {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    color: #333;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #8e2de2;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 10px;
+}
+
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* --- CAJA DE INFO Y LLAVES (Inciso b) --- */
+.info-box {
+    background: #1a1a1a;
+    border-radius: 20px;
+    padding: 20px;
+    border: 1px solid #333;
+    margin-bottom: 20px;
+}
+
+.status-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #4ade80; /* Verde éxito */
+    font-size: 12px;
+    margin-bottom: 12px;
+}
+
+.key-display-area {
+    margin-top: 15px;
+    background: #000;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px dashed #444;
+}
+
+.key-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+    color: #666;
+}
+
+.key-display-area code {
+    color: #a855f7;
+    font-size: 11px;
+    word-break: break-all;
+    font-family: 'Monaco', monospace;
+}
+
+/* --- GRUPO DE ACCIONES (Inciso h y g) --- */
+.actions-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.btn-action.primary {
+    background: linear-gradient(135deg, #8e2de2, #4a00e0);
+    color: white;
+    border: none;
+    padding: 14px;
+    border-radius: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-action.primary:active { transform: scale(0.98); }
+
+.multimedia-test {
+    text-align: center;
+    margin-top: 5px;
+}
+
+.file-label {
+    color: #888;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 10px;
+    border-radius: 10px;
+    transition: 0.3s;
+}
+
+.file-label:hover { color: #8e2de2; background: rgba(142,45,226,0.05); }
+
+/* --- FOOTER --- */
+.security-footer {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    color: #444;
+    padding-top: 20px;
+    font-size: 11px;
+}
+
+/* --- RESPONSIVE CELULAR (SAMSUNG A5) --- */
+@media (max-width: 480px) {
+    .centered-layout { padding: 0; }
+    .module-card {
+        max-width: 100%;
+        min-height: 100vh;
+        border-radius: 0;
+        border: none;
+    }
+}
+
+.fingerprint {
+    display: block;
+    margin-top: 10px;
+    padding: 12px;
+    background: #0f0f0f;
+    border-radius: 10px;
+    font-size: 16px;
+    letter-spacing: 2px;
+    color: #8e5eff;
+    text-align: center;
+    white-space: pre-line;
+    font-weight: 500;
+}
+
+.fingerprint-info {
+    font-size: 12px;
+    opacity: 0.7;
+    margin-top: 8px;
+    text-align: center;
+}

@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ConneX - Sala de Grupo</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/chatsgrupos.css">
+    <style>
+        /* Garantiza que el dropdown sea visible al activarse */
+        .dropdown-content.show {
+            display: block !important;
+            opacity: 1;
+            visibility: visible;
+        }
+        .avatar-grande {
+            width: 100px;
+            height: 100px;
+            background: #a855f7;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            overflow: hidden;
+            position: relative;
+            border: 2px solid #334155;
+        }
+        .avatar-grande img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .btn-edit-photo {
+            position: absolute;
+            bottom: 0;
+            background: rgba(0,0,0,0.6);
+            width: 100%;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 5px 0;
+            transition: background 0.3s;
+        }
+        .btn-edit-photo:hover {
+            background: rgba(168, 85, 247, 0.8);
+        }
+        .input-info-text:disabled {
+            cursor: default;
+        }
+    </style>
+</head>
+<body>
+
+    <button class="menu-toggle" id="menuToggle">☰</button>
+    <div class="menu-overlay" id="menuOverlay"></div>
+
+    <div class="app-container">
+        <nav class="sidebar" id="sidebar">
+            <div class="logo">C</div>
+            <div class="nav-icons">
+                <span class="material-icons" onclick="location.href='chats.html'">chat</span>
+                <span class="material-icons" onclick="location.href='contactos.html'">group</span>
+                <span class="material-icons active" onclick="location.href='grupos.html'">groups</span>
+                <span class="material-icons" onclick="location.href='estados.html'">visibility</span>
+            </div>
+            <div class="nav-bottom">
+                <span class="material-icons" onclick="location.href='ajustes.html'">settings</span>
+            </div>
+        </nav>
+
+        <main class="chat-app-container">
+            <header class="chat-header">
+                <div class="header-left">
+                    <button onclick="window.location.href='grupos.html'" class="btn-back">
+                        <i class="material-icons">arrow_back</i>
+                    </button>
+                    <div class="avatar-header" id="header-avatar-grupo"></div>
+                    <div class="text-info">
+                        <h2 id="nombre-grupo">Cargando grupo...</h2>
+                        <div id="typing-indicator" class="typing-text" style="display: none;">escribiendo...</div>
+                    </div>
+                </div>
+
+                <div class="header-right">
+                    <div class="dropdown">
+                        <button class="btn-icon" id="btn-config">
+                            <i class="material-icons">more_vert</i>
+                        </button>
+                        <div id="config-menu" class="dropdown-content">
+                            <button id="btn-abrir-info" class="menu-item-dropdown">
+                                <i class="material-icons">info</i> 
+                                <span>Información del Grupo</span>
+                            </button>
+                            <button id="btn-verificar-seguridad" class="menu-item-dropdown">
+                                <i class="material-icons">verified_user</i> 
+                                <span>Verificar Seguridad</span>
+                            </button>
+                            <button id="btn-renovar-llave" class="menu-item-dropdown">
+                                <i class="material-icons">sync</i> 
+                                <span>Renovar Seguridad</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="modal-seguridad" class="modal-overlay" style="display: none;">
+                    <div class="modal-content">
+                        <span class="material-icons" style="font-size: 48px; color: #a855f7;">verified_user</span>
+                        <h3>Cifrado de Extremo a Extremo</h3>
+                        <p style="color: #94a3b8; font-size: 0.9rem;">Los mensajes en este grupo están protegidos.</p>
+                        <div id="codigo-seguridad" class="security-code"></div>
+                        <button class="btn-close-modal" onclick="document.getElementById('modal-seguridad').style.display='none'">Entendido</button>
+                    </div>
+                </div>
+            </header>
+
+            <section id="chat-messages" class="chat-messages"></section>
+
+            <footer class="chat-input-area">
+                <div id="attachment-menu" class="attachment-menu">
+                    <button class="menu-item" onclick="document.getElementById('file-input-img').click()">
+                        <i class="material-icons">image</i><span>Fotos</span>
+                    </button>
+                </div>
+                <input type="file" id="file-input-img" accept="image/*" style="display:none" onchange="enviarArchivo(this, 'image')">
+
+                <div class="input-wrapper">
+                    <button id="btn-plus" class="btn-plus">
+                        <i class="material-icons">add</i>
+                    </button>
+                    <input type="text" id="message-input" placeholder="Escribe un mensaje cifrado..." autocomplete="off">
+                    <button id="send-btn" class="btn-send">
+                        <i class="material-icons">send</i>
+                    </button>
+                </div>
+            </footer>
+        </main>
+
+        <div id="sidebar-info-grupo" class="right-sidebar">
+            <div class="sidebar-info-header">
+                <button class="btn-icon" onclick="cerrarSidebarInfo()">
+                    <i class="material-icons">close</i>
+                </button>
+                <h3>Información del Grupo</h3>
+            </div>
+            
+            <div class="sidebar-info-body">
+                <div class="avatar-grande">
+                    <img id="img-grupo-preview" src="img/default-group.png">
+                    <button id="btn-cambiar-foto" class="btn-edit-photo" style="display: none;" onclick="document.getElementById('input-file-grupo').click()">
+                        <i class="material-icons">camera_alt</i>
+                    </button>
+                </div>
+                <input type="file" id="input-file-grupo" hidden accept="image/*" onchange="previsualizarFotoGrupo(this)">
+                
+                <div class="seccion-info">
+                    <h4 id="info-titulo-grupo" style="text-align: center; color: #a855f7; margin-bottom: 5px;">Nombre del Grupo</h4>
+                    <input type="text" id="edit-nombre-grupo" class="input-info-text" disabled 
+                           style="background: transparent; color: white; border: none; font-size: 1.2rem; text-align: center; width: 100%; border-bottom: 1px solid transparent;">
+                </div>
+
+                <div class="seccion-info">
+                    <h4>Descripción</h4>
+                    <textarea id="edit-descripcion" class="input-info" readonly placeholder="Sin descripción..."></textarea>
+                </div>
+
+                <div class="seccion-info">
+                    <h4>Reglas del Grupo</h4>
+                    <textarea id="edit-reglas" class="input-info" readonly placeholder="Sin reglas establecidas..."></textarea>
+                </div>
+
+                <div id="admin-actions" style="display: none; margin-top: 20px; flex-direction: column; gap: 10px;">
+                    <button id="btn-editar-info" class="btn-primary" style="width: 100%; padding: 12px; border-radius: 8px; cursor: pointer; background: #6366f1; color: white; border: none;">
+                        Editar Información
+                    </button>
+                    <button id="btn-guardar-info" class="btn-success" style="width: 100%; display: none; padding: 12px; border-radius: 8px; cursor: pointer; background: #22c55e; color: white; border: none;">
+                        Guardar Cambios
+                    </button>
+                </div>
+
+                <div class="seccion-participantes" style="margin-top: 30px;">
+                    <h4>Participantes</h4>
+                    <div id="lista-participantes-gestion">
+                        </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/cifrado.js"></script>
+    <script src="/js/crearClaveGrupo.js"></script>
+    <script src="/js/chatsgrupos.js"></script>
+
+    <script>
+        // Referencias a elementos
+        const btnConfig = document.getElementById('btn-config');
+        const menuConfig = document.getElementById('config-menu');
+        const btnPlus = document.getElementById('btn-plus');
+        const menuAdjuntos = document.getElementById('attachment-menu');
+        const sidebarInfo = document.getElementById('sidebar-info-grupo');
+
+        
+        
+        // Toggle Menú Configuración
+        btnConfig?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            menuConfig.classList.toggle('show');
+            menuAdjuntos?.classList.remove('show');
+        });
+
+        // Abrir Sidebar de Info
+        document.getElementById('btn-abrir-info')?.addEventListener('click', () => {
+            sidebarInfo.classList.add('active');
+            menuConfig.classList.remove('show');
+            // Llama a la función de chatsgrupos.js
+            if (typeof cargarInfoDetallada === 'function') cargarInfoDetallada();
+        });
+
+        function cerrarSidebarInfo() {
+            sidebarInfo.classList.remove('active');
+        }
+
+        // Toggle Adjuntos
+        btnPlus?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            menuAdjuntos.classList.toggle('show');
+            menuConfig.classList.remove('show');
+        });
+
+        // Cerrar menús al hacer clic fuera
+        document.addEventListener('click', () => {
+            menuConfig?.classList.remove('show');
+            menuAdjuntos?.classList.remove('show');
+        });
+
+        // Lógica de Previsualización Local
+        function previsualizarFotoGrupo(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById('img-grupo-preview').src = e.target.result;
+                    // Asignamos a la variable global definida en chatsgrupos.js
+                    if (typeof base64Foto !== 'undefined') {
+                        base64Foto = e.target.result;
+                    }
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // Lógica de interfaz para Edición
+        document.getElementById('btn-editar-info')?.addEventListener('click', () => {
+            const nombreInput = document.getElementById('edit-nombre-grupo');
+            nombreInput.disabled = false;
+            nombreInput.style.borderBottom = "1px solid #a855f7";
+            
+            document.getElementById('edit-descripcion').readOnly = false;
+            document.getElementById('edit-reglas').readOnly = false;
+            
+            document.getElementById('btn-editar-info').style.display = 'none';
+            document.getElementById('btn-guardar-info').style.display = 'block';
+            nombreInput.focus();
+        });
+
+        document.getElementById('btn-guardar-info')?.addEventListener('click', async () => {
+            if (typeof guardarCambiosGrupo === 'function') {
+                await guardarCambiosGrupo();
+            }
+            // Ejemplo dentro de la función que dibuja la lista
+            const botonesAdmin = (soyAdmin && int.id_usuario !== idUsuarioActual) ? `
+                <div class="admin-btns">
+                    ${int.es_admin_grupo === 0 ? 
+                        `<button onclick="hacerAdmin(${int.id_usuario})" class="btn-ascender">Hacer Admin</button>` : 
+                        `<span class="badge-admin">Es Admin</span>`
+                    }
+                    <button onclick="eliminarMiembro(${int.id_usuario})" class="btn-eliminar">Eliminar</button>
+                </div>
+            ` : '';
+            // Re-bloquear campos tras guardar
+            const nombreInput = document.getElementById('edit-nombre-grupo');
+            nombreInput.disabled = true;
+            nombreInput.style.borderBottom = "1px solid transparent";
+            
+            document.getElementById('edit-descripcion').readOnly = true;
+            document.getElementById('edit-reglas').readOnly = true;
+            
+            document.getElementById('btn-editar-info').style.display = 'block';
+            document.getElementById('btn-guardar-info').style.display = 'none';
+        });
+
+        // Modal Seguridad
+        document.getElementById('btn-verificar-seguridad')?.addEventListener('click', () => {
+            document.getElementById('modal-seguridad').style.display = 'flex';
+            menuConfig.classList.remove('show');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,182 @@
+body{
+    margin:0;
+    font-family: Arial, Helvetica, sans-serif;
+    color:white;
+
+    background: radial-gradient(circle at center, #1a0033 0%, #0a0015 40%, #000000 100%);
+
+    min-height:100vh;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+.container{
+    text-align: center;
+    max-width: 500px;
+    width: 100%;
+}
+
+.logo{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 30px;
+}
+
+.circle{
+    background: #7b2cff;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+.planeta{
+    width:260px;
+    max-width:80%;
+    display:block;
+    margin:auto;
+
+    filter: drop-shadow(0 0 20px #9b3dff);
+}
+
+h1{
+    margin-bottom:10px;
+}
+
+.frase{
+    color:#aaa;
+    font-style:italic;
+}
+
+.descripcion{
+    max-width:400px;
+    margin:auto;
+    margin-top:10px;
+    font-size:14px;
+}
+
+.button-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    margin-top: 30px;
+}
+
+/* Botones principales */
+.btn-primary {
+    background: linear-gradient(135deg, #7b2ff7, #a64dff);
+    border: none;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+    margin-bottom: 12px;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(123, 47, 247, 0.4);
+}
+
+.btn-secondary {
+    background: transparent;
+    border: 2px solid #7b2ff7;
+    color: #7b2ff7;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+    margin-bottom: 12px;
+}
+
+.btn-secondary:hover {
+    background: #7b2ff7;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.btn-admin {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.btn-admin:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.button-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    max-width: 280px;
+    margin: 0 auto;
+}
+
+/* TABLET */
+@media (max-width: 768px){
+
+h1{
+    font-size:28px;
+}
+
+.descripcion{
+    font-size:14px;
+}
+
+.planeta{
+    width:70%;
+}
+
+.button-group {
+    gap: 12px;
+}
+
+}
+
+/* CELULAR */
+@media (max-width: 480px){
+
+h1{
+    font-size:24px;
+}
+
+.logo{
+    justify-content:center;
+}
+
+.descripcion{
+    font-size:13px;
+}
+
+.btn-primary, .btn-admin {
+    font-size:15px;
+    padding: 12px;
+}
+
+.button-group {
+    gap: 10px;
+}
+
+}

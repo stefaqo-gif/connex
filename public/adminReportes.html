@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin – ConneX Reportes</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --bg:       #0d0d0f;
+    --surface:  #16161a;
+    --surface2: #1e1e24;
+    --border:   rgba(255,255,255,0.07);
+    --text:     #f0eff4;
+    --muted:    #8b8a96;
+    --purple:   #7b5cf5;
+    --purple2:  #a48bfa;
+    --teal:     #1fc98e;
+    --coral:    #f26b4e;
+    --amber:    #f5a623;
+    --blue:     #4a90d9;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── Layout ── */
+  .shell { display: flex; min-height: 100vh; }
+
+  .sidebar {
+    width: 220px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 28px 0;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+  .sidebar-logo {
+    padding: 0 20px 24px;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--purple2);
+    letter-spacing: -0.3px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 8px;
+  }
+  .sidebar-logo span { color: var(--muted); font-weight: 400; font-size: 13px; display: block; margin-top: 2px; }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 20px;
+    font-size: 13px;
+    color: var(--muted);
+    cursor: pointer;
+    border-radius: 0;
+    transition: background 0.15s, color 0.15s;
+    border-left: 2px solid transparent;
+  }
+  .nav-item:hover { background: rgba(123,92,245,0.08); color: var(--text); }
+  .nav-item.active { color: var(--purple2); border-left-color: var(--purple); background: rgba(123,92,245,0.1); }
+  .nav-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+
+  .main { flex: 1; padding: 32px 36px; overflow-x: hidden; }
+
+  .top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+  }
+  .top-bar h1 { font-size: 20px; font-weight: 600; letter-spacing: -0.3px; }
+  .top-bar .fecha { font-size: 13px; color: var(--muted); font-family: 'DM Mono', monospace; }
+
+  /* ── Secciones ── */
+  .section { display: none; }
+  .section.active { display: block; }
+  .section-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 18px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* ── Metric cards ── */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .mcard {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+  }
+  .mcard .lbl { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .mcard .val { font-size: 26px; font-weight: 600; color: var(--text); line-height: 1; }
+  .mcard .sub { font-size: 12px; color: var(--teal); margin-top: 5px; }
+  .mcard .sub.warn { color: var(--coral); }
+  .mcard .sub.neutral { color: var(--muted); }
+
+  /* ── Chart boxes ── */
+  .charts-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .chart-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+  }
+  .chart-box h3 { font-size: 13px; font-weight: 500; color: var(--muted); margin-bottom: 14px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 10px; font-size: 12px; color: var(--muted); }
+  .legend span { display: flex; align-items: center; gap: 5px; }
+  .ldot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+
+  /* ── Tablas ── */
+  .tbl-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
+  th {
+    text-align: left;
+    padding: 10px 14px;
+    color: var(--muted);
+    font-weight: 500;
+    font-size: 12px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255,255,255,0.02);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  /* ── Badges ── */
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    padding: 2px 9px;
+    border-radius: 20px;
+    font-weight: 500;
+    font-family: 'DM Mono', monospace;
+  }
+  .badge.green  { background: rgba(31,201,142,0.12); color: #1fc98e; }
+  .badge.purple { background: rgba(123,92,245,0.15); color: #a48bfa; }
+  .badge.gray   { background: rgba(255,255,255,0.06); color: var(--muted); }
+  .badge.amber  { background: rgba(245,166,35,0.12); color: #f5a623; }
+  .badge.coral  { background: rgba(242,107,78,0.12); color: #f26b4e; }
+
+  /* ── Rank bar ── */
+  .rank-bar-wrap { display: flex; align-items: center; gap: 10px; }
+  .rank-bar-bg { flex: 1; height: 5px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; }
+  .rank-bar-fill { height: 100%; border-radius: 3px; background: var(--purple); }
+  .rank-num { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); min-width: 28px; text-align: right; }
+
+  /* ── Avatar inicial ── */
+  .av {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: rgba(123,92,245,0.2);
+    color: var(--purple2);
+    font-size: 12px; font-weight: 600;
+    display: inline-flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .av-cell { display: flex; align-items: center; gap: 8px; }
+
+  /* ── Loading ── */
+  .loading {
+    display: flex; align-items: center; justify-content: center;
+    padding: 40px; color: var(--muted); font-size: 13px; gap: 10px;
+  }
+  .spinner {
+    width: 18px; height: 18px;
+    border: 2px solid rgba(123,92,245,0.2);
+    border-top-color: var(--purple);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .empty { text-align: center; padding: 32px; color: var(--muted); font-size: 13px; }
+  .note  { font-size: 12px; color: var(--muted); padding: 8px 2px; font-family: 'DM Mono', monospace; }
+
+  @media (max-width: 700px) {
+    .shell { flex-direction: column; }
+    .sidebar { width: 100%; height: auto; position: static; flex-direction: row; flex-wrap: wrap; padding: 12px; }
+    .sidebar-logo { display: none; }
+    .nav-item { border-left: none; border-bottom: 2px solid transparent; padding: 8px 12px; }
+    .nav-item.active { border-bottom-color: var(--purple); border-left: none; }
+    .main { padding: 20px 16px; }
+    .charts-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">ConneX <span>Panel de reportes</span></div>
+    <div class="nav-item active" onclick="ir('general',this)"><span class="nav-dot"></span>General</div>
+    <div class="nav-item" onclick="ir('usuarios',this)"><span class="nav-dot"></span>Usuarios activos</div>
+    <div class="nav-item" onclick="ir('mensajes',this)"><span class="nav-dot"></span>Mensajes por usuario</div>
+    <div class="nav-item" onclick="ir('grupos',this)"><span class="nav-dot"></span>Grupos y miembros</div>
+    <div class="nav-item" onclick="ir('contactos',this)"><span class="nav-dot"></span>Contactos por usuario</div>
+    <div class="nav-item" onclick="ir('estados',this)"><span class="nav-dot"></span>Estados más vistos</div>
+  </nav>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="top-bar">
+      <h1 id="secTitulo">Vista general</h1>
+      <span class="fecha" id="fechaHoy"></span>
+    </div>
+
+    <!-- ══ GENERAL ══ -->
+    <div class="section active" id="sec-general">
+      <div class="cards-grid">
+        <div class="mcard"><div class="lbl">Usuarios totales</div><div class="val" id="g-usuarios">—</div><div class="sub" id="g-usuariosSub"></div></div>
+        <div class="mcard"><div class="lbl">Mensajes totales</div><div class="val" id="g-mensajes">—</div><div class="sub neutral">histórico</div></div>
+        <div class="mcard"><div class="lbl">Grupos activos</div><div class="val" id="g-grupos">—</div><div class="sub" id="g-gruposSub"></div></div>
+        <div class="mcard"><div class="lbl">Estados activos</div><div class="val" id="g-estados">—</div><div class="sub neutral">últimas 24 h</div></div>
+        <div class="mcard"><div class="lbl">Silenciados</div><div class="val" id="g-silenciados">—</div><div class="sub warn" id="g-silenciadosSub"></div></div>
+      </div>
+      <div class="charts-row">
+        <div class="chart-box">
+          <h3>Registros por mes</h3>
+          <div class="legend"><span><span class="ldot" style="background:#7b5cf5"></span>Nuevos usuarios</span></div>
+          <div style="position:relative;height:200px"><canvas id="cReg"></canvas></div>
+        </div>
+        <div class="chart-box">
+          <h3>Mensajes últimos 7 días</h3>
+          <div class="legend"><span><span class="ldot" style="background:#1fc98e"></span>Mensajes enviados</span></div>
+          <div style="position:relative;height:200px"><canvas id="cMsg7"></canvas></div>
+        </div>
+      </div>
+      <div class="charts-row">
+        <div class="chart-box">
+          <h3>Estados activos vs expirados</h3>
+          <div class="legend" id="lgEstados"></div>
+          <div style="position:relative;height:200px"><canvas id="cEst"></canvas></div>
+        </div>
+        <div class="chart-box">
+          <h3>Roles de usuarios</h3>
+          <div class="legend" id="lgRoles"></div>
+          <div style="position:relative;height:200px"><canvas id="cRoles"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ USUARIOS ACTIVOS ══ -->
+    <div class="section" id="sec-usuarios">
+      <div class="cards-grid">
+        <div class="mcard"><div class="lbl">Total usuarios</div><div class="val" id="u-total">—</div><div class="sub neutral">registrados</div></div>
+        <div class="mcard"><div class="lbl">Verificados</div><div class="val" id="u-verif">—</div><div class="sub">confirmados</div></div>
+        <div class="mcard"><div class="lbl">Admins</div><div class="val" id="u-admins">—</div><div class="sub neutral">con rol Admin</div></div>
+      </div>
+      <div class="tbl-wrap" id="tblUsuariosWrap">
+        <div class="loading"><div class="spinner"></div>Cargando...</div>
+      </div>
+      <p class="note" id="noteUsuarios"></p>
+    </div>
+
+    <!-- ══ MENSAJES POR USUARIO ══ -->
+    <div class="section" id="sec-mensajes">
+      <div class="cards-grid">
+        <div class="mcard"><div class="lbl">Total mensajes</div><div class="val" id="m-total">—</div><div class="sub neutral">histórico</div></div>
+        <div class="mcard"><div class="lbl">Usuario más activo</div><div class="val" id="m-top" style="font-size:16px;margin-top:4px">—</div><div class="sub" id="m-topCount"></div></div>
+        <div class="mcard"><div class="lbl">Promedio por usuario</div><div class="val" id="m-avg">—</div><div class="sub neutral">mensajes</div></div>
+      </div>
+      <div class="chart-box" style="margin-bottom:20px">
+        <h3>Top 10 — usuarios con más mensajes</h3>
+        <div style="position:relative;height:340px"><canvas id="cMsgTop"></canvas></div>
+      </div>
+      <div class="tbl-wrap" id="tblMensajesWrap">
+        <div class="loading"><div class="spinner"></div>Cargando...</div>
+      </div>
+      <p class="note" id="noteMensajes"></p>
+    </div>
+
+    <!-- ══ GRUPOS ══ -->
+    <div class="section" id="sec-grupos">
+      <div class="cards-grid">
+        <div class="mcard"><div class="lbl">Total grupos</div><div class="val" id="gr-total">—</div><div class="sub neutral">creados</div></div>
+        <div class="mcard"><div class="lbl">Grupo más grande</div><div class="val" id="gr-top" style="font-size:15px;margin-top:4px">—</div><div class="sub" id="gr-topCount"></div></div>
+        <div class="mcard"><div class="lbl">Promedio miembros</div><div class="val" id="gr-avg">—</div><div class="sub neutral">por grupo</div></div>
+      </div>
+      <div class="chart-box" style="margin-bottom:20px">
+        <h3>Miembros por grupo (top 10)</h3>
+        <div style="position:relative;height:340px"><canvas id="cGrupos"></canvas></div>
+      </div>
+      <div class="tbl-wrap" id="tblGruposWrap">
+        <div class="loading"><div class="spinner"></div>Cargando...</div>
+      </div>
+      <p class="note" id="noteGrupos"></p>
+    </div>
+
+    <!-- ══ CONTACTOS ══ -->
+    <div class="section" id="sec-contactos">
+      <div class="cards-grid">
+        <div class="mcard"><div class="lbl">Total contactos</div><div class="val" id="co-total">—</div><div class="sub neutral">relaciones</div></div>
+        <div class="mcard"><div class="lbl">Usuario más conectado</div><div class="val" id="co-top" style="font-size:15px;margin-top:4px">—</div><div class="sub" id="co-topCount"></div></div>
+        <div class="mcard"><div class="lbl">Promedio por usuario</div><div class="val" id="co-avg">—</div><div class="sub neutral">contactos</div></div>
+      </div>
+      <div class="chart-box" style="margin-bottom:20px">
+        <h3>Top 10 — usuarios con más contactos</h3>
+        <div style="position:relative;height:340px"><canvas id="cContactos"></canvas></div>
+      </div>
+      <div class="tbl-wrap" id="tblContactosWrap">
+        <div class="loading"><div class="spinner"></div>Cargando...</div>
+      </div>
+      <p class="note" id="noteContactos"></p>
+    </div>
+
+    <!-- ══ ESTADOS MÁS VISTOS ══ -->
+    <div class="section" id="sec-estados">
+      <div class="cards-grid">
+        <div class="mcard"><div class="lbl">Estados activos</div><div class="val" id="es-total">—</div><div class="sub neutral">en este momento</div></div>
+        <div class="mcard"><div class="lbl">Total vistas</div><div class="val" id="es-vistas">—</div><div class="sub neutral">acumuladas</div></div>
+        <div class="mcard"><div class="lbl">Más visto</div><div class="val" id="es-top" style="font-size:15px;margin-top:4px">—</div><div class="sub" id="es-topCount"></div></div>
+      </div>
+      <div class="chart-box" style="margin-bottom:20px">
+        <h3>Top estados por vistas</h3>
+        <div style="position:relative;height:300px"><canvas id="cEstadosTop"></canvas></div>
+      </div>
+      <div class="tbl-wrap" id="tblEstadosWrap">
+        <div class="loading"><div class="spinner"></div>Cargando...</div>
+      </div>
+      <p class="note" id="noteEstados"></p>
+    </div>
+
+  </main>
+</div>
+
+<script>
+const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const HOY   = new Date();
+const DIAS7 = Array.from({length:7},(_,i)=>{const d=new Date(HOY);d.setDate(HOY.getDate()-6+i);return d.toLocaleDateString('es-CR',{weekday:'short'});});
+
+document.getElementById('fechaHoy').textContent =
+  HOY.toLocaleDateString('es-CR',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+const TITULOS = { general:'Vista general', usuarios:'Usuarios activos', mensajes:'Mensajes por usuario', grupos:'Grupos y miembros', contactos:'Contactos por usuario', estados:'Estados más vistos' };
+
+function ir(sec, el) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('sec-' + sec).classList.add('active');
+  el.classList.add('active');
+  document.getElementById('secTitulo').textContent = TITULOS[sec];
+}
+
+function baseChart(opts){ return { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } }, ...opts }; }
+function axisOpts(){
+  return {
+    x:{ grid:{ color:'rgba(255,255,255,0.04)' }, ticks:{ color:'#8b8a96', font:{ size:11 } } },
+    y:{ grid:{ color:'rgba(255,255,255,0.04)' }, ticks:{ color:'#8b8a96', font:{ size:11 }, precision:0 } }
+  };
+}
+
+function setText(id, val){ const el=document.getElementById(id); if(el) el.textContent = val; }
+function av(name){ return (name||'?')[0].toUpperCase(); }
+
+function tblHTML(cols, rows, emptyMsg){
+  if(!rows||!rows.length) return `<div class="empty">${emptyMsg||'Sin datos'}</div>`;
+  const ths = cols.map(c=>`<th style="width:${c.w||'auto'}">${c.label}</th>`).join('');
+  const trs = rows.map(r=>`<tr>${cols.map(c=>`<td>${c.render(r)}</td>`).join('')}</tr>`).join('');
+  return `<table><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table>`;
+}
+
+function rankBar(val, max, color='#7b5cf5'){
+  const pct = max ? Math.round((val/max)*100) : 0;
+  return `<div class="rank-bar-wrap"><div class="rank-bar-bg"><div class="rank-bar-fill" style="width:${pct}%;background:${color}"></div></div><span class="rank-num">${val}</span></div>`;
+}
+
+function avCell(name){
+  return `<div class="av-cell"><div class="av">${av(name)}</div><span>${name||'—'}</span></div>`;
+}
+
+/* ════════════════════════════════
+   CARGA GENERAL
+════════════════════════════════ */
+async function cargarGeneral(){
+  try {
+    const healthRes = await fetch('/api/health').catch(()=>null);
+    const health = healthRes&&healthRes.ok ? await healthRes.json() : {};
+    setText('g-usuarios', health.usuarios ?? '—');
+    setText('g-usuariosSub', health.usuarios ? 'registrados' : '');
+
+    const storiesRes = await fetch('/api/stories/feed/0').catch(()=>null);
+    if(storiesRes&&storiesRes.ok){
+      const raw = await storiesRes.json();
+      const arr = Array.isArray(raw)?raw:(raw.stories||[]);
+      setText('g-estados', arr.length);
+      setText('es-total', arr.length);
+    }
+
+    const usuRes = await fetch('/api/admin/usuarios').catch(()=>null);
+    let usuarios = [];
+    if(usuRes&&usuRes.ok){
+      const d = await usuRes.json();
+      usuarios = Array.isArray(d)?d:(d.usuarios||[]);
+    }
+    const admins = usuarios.filter(u=>u.rol==='Admin').length;
+    const verif  = usuarios.filter(u=>u.esta_verificado).length;
+    setText('u-total', usuarios.length || health.usuarios || '—');
+    setText('u-verif',  verif);
+    setText('u-admins', admins);
+
+    const roles={};
+    usuarios.forEach(u=>{ roles[u.rol||'User']=(roles[u.rol||'User']||0)+1; });
+    const rolesArr = Object.entries(roles).map(([r,t])=>({rol:r,total:t}));
+    const rColors  = ['#7b5cf5','#1fc98e','#f26b4e','#f5a623'];
+    const lgRoles  = document.getElementById('lgRoles');
+    lgRoles.innerHTML = rolesArr.map((r,i)=>`<span><span class="ldot" style="background:${rColors[i%rColors.length]}"></span>${r.rol} (${r.total})</span>`).join('');
+    new Chart(document.getElementById('cRoles'),{
+      type:'doughnut',
+      data:{ labels:rolesArr.map(r=>r.rol), datasets:[{ data:rolesArr.map(r=>r.total), backgroundColor:rColors.slice(0,rolesArr.length), borderWidth:0 }] },
+      options:baseChart({cutout:'65%'})
+    });
+
+    const regLabels = MESES.slice(-6);
+    const regVals   = [0,0,0,0,0,0];
+    new Chart(document.getElementById('cReg'),{
+      type:'bar',
+      data:{ labels:regLabels, datasets:[{ data:regVals, backgroundColor:'#7b5cf5', borderRadius:4 }] },
+      options:baseChart({ scales:axisOpts() })
+    });
+
+    new Chart(document.getElementById('cMsg7'),{
+      type:'line',
+      data:{ labels:DIAS7, datasets:[{ data:[0,0,0,0,0,0,0], borderColor:'#1fc98e', backgroundColor:'rgba(31,201,142,0.07)', fill:true, tension:0.4, pointRadius:3, pointBackgroundColor:'#1fc98e' }] },
+      options:baseChart({ scales:axisOpts() })
+    });
+
+    const lgEst = document.getElementById('lgEstados');
+    lgEst.innerHTML = '<span><span class="ldot" style="background:#7b5cf5"></span>Activos</span><span><span class="ldot" style="background:#444441"></span>Expirados</span>';
+    new Chart(document.getElementById('cEst'),{
+      type:'doughnut',
+      data:{ labels:['Activos','Expirados'], datasets:[{ data:[0,0], backgroundColor:['#7b5cf5','#2c2c2a'], borderWidth:0 }] },
+      options:baseChart({cutout:'65%'})
+    });
+
+  } catch(e){ console.warn('general error:',e); }
+}
+
+/* ════════════════════════════════
+   USUARIOS
+════════════════════════════════ */
+async function cargarUsuarios(){
+  const wrap = document.getElementById('tblUsuariosWrap');
+  try {
+    const res = await fetch('/api/admin/usuarios').catch(()=>null);
+    if(!res||!res.ok) throw new Error('endpoint no disponible');
+    const d = await res.json();
+    const arr = Array.isArray(d)?d:(d.usuarios||[]);
+    setText('u-total',  arr.length);
+    setText('u-verif',  arr.filter(u=>u.esta_verificado).length);
+    setText('u-admins', arr.filter(u=>u.rol==='Admin').length);
+    wrap.innerHTML = tblHTML([
+      { label:'Usuario', w:'35%', render: r => avCell(r.nombre_usuario) },
+      { label:'Correo',  w:'35%', render: r => `<span style="color:#8b8a96">${r.correo||'—'}</span>` },
+      { label:'Rol',     w:'15%', render: r => `<span class="badge ${r.rol==='Admin'?'purple':'gray'}">${r.rol||'User'}</span>` },
+      { label:'Estado',  w:'15%', render: r => `<span class="badge ${r.esta_verificado?'green':'amber'}">${r.esta_verificado?'Verificado':'Pendiente'}</span>` }
+    ], arr, 'Sin usuarios');
+    setText('noteUsuarios', `${arr.length} usuarios en total`);
+  } catch(e){
+    wrap.innerHTML = `<div class="empty">Requiere endpoint <code>/api/admin/usuarios</code></div>`;
+  }
+}
+
+/* ════════════════════════════════
+   MENSAJES POR USUARIO
+════════════════════════════════ */
+async function cargarMensajes(){
+  const wrap = document.getElementById('tblMensajesWrap');
+  try {
+    const res = await fetch('/api/admin/mensajes-por-usuario').catch(()=>null);
+    if(!res||!res.ok) throw new Error();
+    const d = await res.json();
+    const arr = Array.isArray(d)?d:(d.datos||[]);
+    const total = arr.reduce((a,r)=>a+(parseInt(r.total)||0),0);
+    const top   = arr[0];
+    setText('m-total',    total.toLocaleString());
+    setText('m-top',      top?.nombre_usuario||'—');
+    setText('m-topCount', top ? top.total+' mensajes' : '');
+    setText('m-avg',      arr.length ? Math.round(total/arr.length) : '—');
+    const top10 = arr.slice(0,10);
+    const max   = top10[0]?.total||1;
+    new Chart(document.getElementById('cMsgTop'),{
+      type:'bar',
+      data:{ labels:top10.map(r=>r.nombre_usuario||'?'), datasets:[{ data:top10.map(r=>r.total), backgroundColor:'#7b5cf5', borderRadius:4 }] },
+      options:baseChart({ indexAxis:'y', scales:{ x:{ grid:{color:'rgba(255,255,255,0.04)'}, ticks:{color:'#8b8a96',font:{size:11}} }, y:{ grid:{display:false}, ticks:{color:'#8b8a96',font:{size:11}} } } })
+    });
+    wrap.innerHTML = tblHTML([
+      { label:'#',        w:'6%',  render:(_,i)=>`<span style="color:#8b8a96;font-family:DM Mono,monospace">${(i||0)+1}</span>` },
+      { label:'Usuario',  w:'30%', render: r => avCell(r.nombre_usuario) },
+      { label:'Mensajes', w:'40%', render: r => rankBar(r.total, max, '#7b5cf5') },
+      { label:'%',        w:'14%', render: r => `<span class="badge purple">${Math.round((r.total/total)*100)}%</span>` }
+    ], arr.map((r,i)=>({...r,_i:i})).map(r=>({...r})), 'Sin datos de mensajes');
+    const trs = wrap.querySelectorAll('tbody tr');
+    trs.forEach((tr,i)=>{ const tds=tr.querySelectorAll('td'); if(tds[0]) tds[0].textContent=i+1; });
+    setText('noteMensajes', `Top ${arr.length} usuarios por mensajes enviados`);
+  } catch(e){
+    wrap.innerHTML = `<div class="empty">Requiere endpoint <code>/api/admin/mensajes-por-usuario</code></div>`;
+    setText('m-total','—'); setText('m-top','—'); setText('m-avg','—');
+    const canvas = document.getElementById('cMsgTop');
+    new Chart(canvas,{ type:'bar', data:{ labels:['Sin datos'], datasets:[{data:[0],backgroundColor:'#2c2c2a'}] }, options:baseChart({scales:axisOpts()}) });
+  }
+}
+
+/* ════════════════════════════════
+   GRUPOS
+════════════════════════════════ */
+async function cargarGrupos(){
+  const wrap = document.getElementById('tblGruposWrap');
+  try {
+    const res = await fetch('/api/admin/grupos').catch(()=>null);
+    if(!res||!res.ok) throw new Error();
+    const d = await res.json();
+    const arr = Array.isArray(d)?d:(d.grupos||[]);
+    const top = arr[0];
+    const avg = arr.length ? Math.round(arr.reduce((a,r)=>a+(parseInt(r.miembros)||0),0)/arr.length) : 0;
+    setText('gr-total',    arr.length);
+    setText('g-grupos',    arr.length);
+    setText('gr-top',      top?.nombre_grupo||'—');
+    setText('gr-topCount', top ? top.miembros+' miembros' : '');
+    setText('gr-avg',      avg);
+    const top10 = arr.slice(0,10);
+    const max   = top10[0]?.miembros||1;
+    new Chart(document.getElementById('cGrupos'),{
+      type:'bar',
+      data:{ labels:top10.map(r=>r.nombre_grupo||'?'), datasets:[{ data:top10.map(r=>r.miembros), backgroundColor:'#1fc98e', borderRadius:4 }] },
+      options:baseChart({ indexAxis:'y', scales:{ x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8b8a96',font:{size:11}}}, y:{grid:{display:false},ticks:{color:'#8b8a96',font:{size:11}}} } })
+    });
+    wrap.innerHTML = tblHTML([
+      { label:'Grupo',    w:'40%', render: r => `<div class="av-cell"><div class="av" style="background:rgba(31,201,142,0.15);color:#1fc98e">${av(r.nombre_grupo)}</div><span>${r.nombre_grupo||'—'}</span></div>` },
+      { label:'Miembros', w:'40%', render: r => rankBar(r.miembros, max, '#1fc98e') },
+      { label:'Creado',   w:'20%', render: r => r.fecha_creacion ? new Date(r.fecha_creacion).toLocaleDateString('es-CR',{month:'short',day:'numeric'}) : '—' }
+    ], arr, 'Sin grupos');
+    setText('noteGrupos', `${arr.length} grupos en total`);
+  } catch(e){
+    wrap.innerHTML = `<div class="empty">Requiere endpoint <code>/api/admin/grupos</code></div>`;
+    setText('gr-total','—'); setText('gr-top','—'); setText('gr-avg','—'); setText('g-grupos','—');
+    new Chart(document.getElementById('cGrupos'),{ type:'bar', data:{ labels:['Sin datos'], datasets:[{data:[0],backgroundColor:'#2c2c2a'}] }, options:baseChart({scales:axisOpts()}) });
+  }
+}
+
+/* ════════════════════════════════
+   CONTACTOS
+════════════════════════════════ */
+async function cargarContactos(){
+  const wrap = document.getElementById('tblContactosWrap');
+  try {
+    const res = await fetch('/api/admin/contactos-por-usuario').catch(()=>null);
+    if(!res||!res.ok) throw new Error();
+    const d = await res.json();
+    const arr = Array.isArray(d)?d:(d.datos||[]);
+    const total = arr.reduce((a,r)=>a+(parseInt(r.total)||0),0);
+    const top   = arr[0];
+    const avg   = arr.length ? Math.round(total/arr.length) : 0;
+    setText('co-total',    total.toLocaleString());
+    setText('co-top',      top?.nombre_usuario||'—');
+    setText('co-topCount', top ? top.total+' contactos' : '');
+    setText('co-avg',      avg);
+    const top10 = arr.slice(0,10);
+    const max   = top10[0]?.total||1;
+    new Chart(document.getElementById('cContactos'),{
+      type:'bar',
+      data:{ labels:top10.map(r=>r.nombre_usuario||'?'), datasets:[{ data:top10.map(r=>r.total), backgroundColor:'#4a90d9', borderRadius:4 }] },
+      options:baseChart({ indexAxis:'y', scales:{ x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8b8a96',font:{size:11}}}, y:{grid:{display:false},ticks:{color:'#8b8a96',font:{size:11}}} } })
+    });
+    wrap.innerHTML = tblHTML([
+      { label:'#',         w:'6%',  render:(_r,_i)=>'—' },
+      { label:'Usuario',   w:'35%', render: r => avCell(r.nombre_usuario) },
+      { label:'Contactos', w:'44%', render: r => rankBar(r.total, max, '#4a90d9') },
+      { label:'Rango',     w:'15%', render: r => {
+          const p = Math.round((r.total/max)*100);
+          return `<span class="badge ${p>66?'green':p>33?'amber':'gray'}">${p>66?'Alto':p>33?'Medio':'Bajo'}</span>`;
+        }
+      }
+    ], arr, 'Sin datos de contactos');
+    const trs = wrap.querySelectorAll('tbody tr');
+    trs.forEach((tr,i)=>{ const tds=tr.querySelectorAll('td'); if(tds[0]) tds[0].textContent=i+1; });
+    setText('noteContactos', `${arr.length} usuarios con contactos`);
+  } catch(e){
+    wrap.innerHTML = `<div class="empty">Requiere endpoint <code>/api/admin/contactos-por-usuario</code></div>`;
+    setText('co-total','—'); setText('co-top','—'); setText('co-avg','—');
+    new Chart(document.getElementById('cContactos'),{ type:'bar', data:{ labels:['Sin datos'], datasets:[{data:[0],backgroundColor:'#2c2c2a'}] }, options:baseChart({scales:axisOpts()}) });
+  }
+}
+
+/* ════════════════════════════════
+   ESTADOS MÁS VISTOS
+════════════════════════════════ */
+async function cargarEstados(){
+  const wrap = document.getElementById('tblEstadosWrap');
+  try {
+    const res = await fetch('/api/stories/feed/0').catch(()=>null);
+    if(!res||!res.ok) throw new Error();
+    const raw = await res.json();
+    const arr = (Array.isArray(raw)?raw:(raw.stories||[])).sort((a,b)=>(b.view_count||0)-(a.view_count||0));
+    const totalVistas = arr.reduce((a,r)=>a+(parseInt(r.view_count)||0),0);
+    const top = arr[0];
+    setText('es-total',    arr.length);
+    setText('es-vistas',   totalVistas.toLocaleString());
+    setText('es-top',      top?.username||top?.nombre_usuario||'—');
+    setText('es-topCount', top ? (top.view_count||0)+' vistas' : '');
+    const top10 = arr.slice(0,10);
+    const max   = top10[0]?.view_count||1;
+    new Chart(document.getElementById('cEstadosTop'),{
+      type:'bar',
+      data:{
+        labels: top10.map(r=>(r.username||r.nombre_usuario||'?').slice(0,12)),
+        datasets:[{ data:top10.map(r=>r.view_count||0), backgroundColor:'#f5a623', borderRadius:4 }]
+      },
+      options:baseChart({ scales:axisOpts() })
+    });
+    wrap.innerHTML = tblHTML([
+      { label:'#',       w:'6%',  render:(_,i)=>`<span style="color:#8b8a96;font-family:DM Mono,monospace">${(i||0)+1}</span>` },
+      { label:'Usuario', w:'22%', render: r => avCell(r.username||r.nombre_usuario) },
+      { label:'Contenido',w:'30%',render: r => `<span style="color:#8b8a96">${r.content||r.texto_estado||'(imagen)'}</span>` },
+      { label:'Vistas',  w:'28%', render: r => rankBar(r.view_count||0, max, '#f5a623') },
+      { label:'Publicado',w:'14%',render: r => {
+          const f = r.created_at||r.fecha_publicacion;
+          return f ? new Date(f).toLocaleDateString('es-CR',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+        }
+      }
+    ], arr, 'Sin estados activos');
+    const trs = wrap.querySelectorAll('tbody tr');
+    trs.forEach((tr,i)=>{ const tds=tr.querySelectorAll('td'); if(tds[0]) tds[0].textContent=i+1; });
+    setText('noteEstados', `${arr.length} estados activos · ${totalVistas} vistas totales`);
+  } catch(e){
+    wrap.innerHTML = `<div class="empty">Sin estados activos o error al cargar</div>`;
+    new Chart(document.getElementById('cEstadosTop'),{ type:'bar', data:{ labels:['Sin datos'], datasets:[{data:[0],backgroundColor:'#2c2c2a'}] }, options:baseChart({scales:axisOpts()}) });
+  }
+}
+
+/* ════════════════════════════════
+   INIT
+════════════════════════════════ */
+cargarGeneral();
+cargarUsuarios();
+cargarMensajes();
+cargarGrupos();
+cargarContactos();
+cargarEstados();
+</script>
+</body>
+</html>

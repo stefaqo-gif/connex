@@ -1,0 +1,21 @@
+{
+  "name": "connex",
+  "version": "1.0.0",
+  "description": "Aplicación de mensajería ConneX",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "build": "npm install"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "multer": "^2.1.1",
+    "mysql2": "^3.20.0",
+    "node-rsa": "^1.1.1",
+    "nodemailer": "^8.0.4",
+    "socket.io": "^4.8.3",
+    "ws": "^8.19.0"
+  }
+}

@@ -1,0 +1,302 @@
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  color: white;
+
+  background: radial-gradient(
+    circle at center,
+    #1a0033 0%,
+    #0a0015 40%,
+    #000000 100%
+  );
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  min-height: 100vh;
+  padding: 20px;
+}
+
+/* TARJETA */
+
+.card {
+  position: relative;
+  background: #151515;
+
+  padding: 40px 30px;
+
+  border-radius: 20px;
+
+  width: 100%;
+  max-width: 380px;
+
+  text-align: center;
+
+  box-shadow:
+    0 0 20px rgba(123, 44, 255, 0.4),
+    0 0 40px rgba(123, 44, 255, 0.2);
+}
+
+/* LOGO */
+
+.logo {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.circle {
+  width: 70px;
+  height: 70px;
+
+  border-radius: 50%;
+
+  background: linear-gradient(135deg, #7b2cff, #a855f7);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  font-size: 30px;
+}
+
+/* TITULOS */
+
+h1 {
+  margin: 10px 0;
+}
+
+.subtitle {
+  color: #aaa;
+  font-size: 14px;
+  margin-bottom: 25px;
+}
+
+/* FORM */
+
+form {
+  text-align: left;
+}
+
+label {
+  font-size: 14px;
+  color: #ccc;
+}
+
+/* INPUTS */
+
+.input {
+  width: 100%;
+
+  margin-top: 8px;
+  margin-bottom: 20px;
+
+  padding: 12px;
+
+  background: #1f1f1f;
+
+  border: 1px solid #333;
+
+  border-radius: 10px;
+
+  color: white;
+}
+
+/* TELEFONO */
+
+.telefono {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+  margin-bottom: 25px;
+}
+
+.codigo {
+  width: 80px;
+
+  padding: 12px;
+
+  background: #1f1f1f;
+
+  border: 1px solid #333;
+
+  border-radius: 10px;
+
+  color: white;
+}
+
+.numero {
+  flex: 1;
+
+  padding: 12px;
+
+  background: #1f1f1f;
+
+  border: 1px solid #333;
+
+  border-radius: 10px;
+
+  color: white;
+}
+
+/* BOTON */
+
+button {
+  width: 100%;
+
+  padding: 14px;
+
+  border: none;
+
+  border-radius: 10px;
+
+  background: linear-gradient(90deg, #7b2cff, #a855f7);
+
+  color: white;
+
+  font-size: 16px;
+
+  cursor: pointer;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+/* Estilos para el botón de retroceder */
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+        }
+        
+        .back-arrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(123, 47, 247, 0.1);
+            border: 1px solid #7b2ff7;
+            color: #7b2ff7;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .back-arrow:hover {
+            background: #7b2ff7;
+            color: white;
+            transform: translateX(-3px);
+        }
+        
+        .back-arrow .material-icons {
+            font-size: 20px;
+        }
+        
+        /* Ajuste para móvil */
+        @media (max-width: 480px) {
+            .back-button {
+                top: 15px;
+                left: 15px;
+            }
+            
+            .back-arrow {
+                width: 35px;
+                height: 35px;
+            }
+            
+            .back-arrow .material-icons {
+                font-size: 18px;
+            }
+        }
+
+/* ========================== */
+/* 📱 TABLETS */
+/* ========================== */
+
+@media (max-width: 768px) {
+
+  .card {
+    max-width: 420px;
+    padding: 35px 25px;
+  }
+
+  h1 {
+    font-size: 26px;
+  }
+
+}
+
+/* ========================== */
+/* 📱 CELULARES */
+/* ========================== */
+
+@media (max-width: 480px) {
+
+  body{
+    padding:15px;
+  }
+
+  .card {
+    padding: 30px 20px;
+  }
+
+  .circle{
+    width:60px;
+    height:60px;
+    font-size:26px;
+  }
+
+  h1 {
+    font-size: 24px;
+  }
+
+  .subtitle{
+    font-size:13px;
+  }
+
+  .telefono{
+    gap:8px;
+  }
+
+  .codigo{
+    width:65px;
+  }
+
+  .input,
+  .numero,
+  .codigo{
+    padding:10px;
+    font-size:14px;
+  }
+
+  button{
+    padding:13px;
+    font-size:15px;
+  }
+
+}
+
+/* ========================== */
+/* 📱 CELULARES PEQUEÑOS */
+/* ========================== */
+
+@media (max-width: 360px) {
+
+  .circle{
+    width:55px;
+    height:55px;
+    font-size:24px;
+  }
+
+  h1{
+    font-size:22px;
+  }
+
+  .codigo{
+    width:60px;
+  }
+
+}

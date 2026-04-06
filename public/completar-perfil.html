@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connex - Completar Perfil</title>
+    <link rel="stylesheet" href="/css/completar-perfil.css">
+</head>
+<body>
+    <div class="card">
+        <div class="logo"><div class="circle">💬</div></div>
+        <h1>Connex</h1>
+        <p class="subtitle">Completa tu perfil para empezar a conectar</p>
+
+        <form id="formPerfil">
+            <label>Nombre de usuario</label>
+            <input type="text" id="nombreUsuario" class="input" placeholder="Ej: Juan Araya" required>
+
+            <label>Foto de perfil</label>
+            <div class="foto-container">
+                <div class="foto-preview" id="fotoPreview"><span>👤</span></div>
+                <input type="file" id="fotoPerfil" accept="image/*" style="display: none;">
+                <button type="button" id="btnSubirFoto" class="btn-secundario">Subir foto</button>
+            </div>
+
+            <label>Información de estado</label>
+            <input type="text" id="infoEstado" class="input" placeholder="¡Hola! Estoy usando ConneX.">
+
+            <label>Privacidad de foto</label>
+            <select id="privacidadFoto" class="input">
+                <option value="Todos">Todos</option>
+                <option value="Contactos">Solo contactos</option>
+                <option value="Nadie">Nadie</option>
+            </select>
+
+            <label>Descarga automática</label>
+            <select id="descargaAuto" class="input">
+                <option value="Wifi">Solo Wi-Fi</option>
+                <option value="Ambos">Wi-Fi y Datos</option>
+                <option value="Nunca">Nunca</option>
+            </select>
+
+            <button type="submit" id="btnGuardar">Guardar y Entrar</button>
+        </form>
+    </div>
+
+    <script>
+        const userId = sessionStorage.getItem('usuarioId') || new URLSearchParams(window.location.search).get('userId');
+        if (!userId) window.location.href = '/registro';
+
+        let fotoBase64 = null;
+
+        document.getElementById('btnSubirFoto').onclick = () => document.getElementById('fotoPerfil').click();
+
+        document.getElementById('fotoPerfil').onchange = (e) => {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                fotoBase64 = ev.target.result;
+                document.getElementById('fotoPreview').innerHTML = `<img src="${fotoBase64}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+            };
+            reader.readAsDataURL(e.target.files[0]);
+        };
+
+        document.getElementById('formPerfil').onsubmit = async (e) => {
+            e.preventDefault();
+            const datos = {
+                userId,
+                nombreUsuario: document.getElementById('nombreUsuario').value,
+                correo: sessionStorage.getItem('correoVerificacion'), // Recuperado del registro
+                fotoUrl: fotoBase64,
+                infoEstado: document.getElementById('infoEstado').value,
+                privacidadFoto: document.getElementById('privacidadFoto').value,
+                descargaAuto: document.getElementById('descargaAuto').value
+            };
+
+            const res = await fetch('/actualizar-perfil', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(datos)
+            });
+
+            if (res.ok) window.location.href = '/chats';
+            else alert('Error al actualizar');
+        };
+    </script>
+</body>
+</html>

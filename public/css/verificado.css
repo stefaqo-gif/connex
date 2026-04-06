@@ -1,0 +1,158 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:'Segoe UI',sans-serif;
+    background:#0f0f14;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:20px;
+}
+
+/* TARJETA */
+.container{
+    background:#1a1a22;
+    width:100%;
+    max-width:420px;
+    padding:50px 40px;
+    border-radius:22px;
+    text-align:center;
+
+    box-shadow:0 0 70px rgba(140,70,255,0.35);
+}
+
+/* ICONO */
+.checkmark-container{
+    margin-bottom:25px;
+    animation:scaleIn .5s ease;
+}
+
+.checkmark{
+    width:70px;
+    height:70px;
+    margin:auto;
+    border-radius:50%;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    font-size:30px;
+    color:white;
+
+    background:linear-gradient(135deg,#7b2ff7,#a64dff);
+}
+
+/* ANIMACION */
+@keyframes scaleIn{
+    0%{
+        transform:scale(0);
+        opacity:0;
+    }
+    60%{
+        transform:scale(1.15);
+    }
+    100%{
+        transform:scale(1);
+        opacity:1;
+    }
+}
+
+/* TITULO */
+.titulo{
+    color:white;
+    font-size:32px;
+    font-weight:700;
+    margin-bottom:15px;
+}
+
+/* MENSAJE */
+.mensaje{
+    color:#9c9ca6;
+    font-size:17px;
+    margin-bottom:35px;
+}
+
+/* BOTON */
+.btn-continuar{
+    width:100%;
+    padding:15px;
+
+    border:none;
+    border-radius:10px;
+
+    font-size:16px;
+    font-weight:600;
+    color:white;
+
+    cursor:pointer;
+
+    background:linear-gradient(90deg,#7b2ff7,#a64dff);
+
+    transition:.25s;
+}
+
+.btn-continuar:hover{
+    transform:translateY(-2px);
+    opacity:.9;
+}
+
+/* ===================== */
+/* RESPONSIVE */
+/* ===================== */
+
+@media (max-width:768px){
+
+    .container{
+        padding:40px 30px;
+    }
+
+    .titulo{
+        font-size:28px;
+    }
+
+}
+
+@media (max-width:480px){
+
+    .container{
+        padding:35px 25px;
+    }
+
+    .checkmark{
+        width:60px;
+        height:60px;
+        font-size:26px;
+    }
+
+    .titulo{
+        font-size:24px;
+    }
+
+    .mensaje{
+        font-size:15px;
+    }
+
+    .btn-continuar{
+        padding:13px;
+        font-size:15px;
+    }
+
+}
+
+@media (max-width:360px){
+
+    .container{
+        padding:30px 20px;
+    }
+
+    .titulo{
+        font-size:22px;
+    }
+
+}

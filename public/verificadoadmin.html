@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificado - Connex Admin</title>
+    <link rel="stylesheet" href="/css/verificadoadmin.css">
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="logo">
+            <div class="circle">💬</div>
+            <span>Connex</span>
+            <span class="admin-badge">Admin</span>
+        </div>
+
+        <div class="success-icon">
+            <div class="checkmark">✓</div>
+        </div>
+
+        <h1>¡Verificado!</h1>
+        
+        <p class="mensaje">
+            Tu cuenta ha sido verificada exitosamente
+        </p>
+
+        <button class="btn-continuar" id="continuarBtn">Continuar</button>
+    </div>
+
+    <script>
+        // Obtener datos de la URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('userId');
+        const nombreUsuario = urlParams.get('nombreUsuario');
+        const nivelAcceso = urlParams.get('nivelAcceso');
+        
+        // Botón continuar
+        document.getElementById('continuarBtn').addEventListener('click', () => {
+            window.location.href = '/admin/dashboard';
+        });
+    </script>
+</body>
+
+</html>

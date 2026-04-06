@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connex - Verificación</title>
+    <link rel="stylesheet" href="/css/verificacion.css">
+</head>
+<body>
+    <div class="container">
+        <h1 class="titulo">Verificación de cuenta</h1>
+        <div class="icono">📧</div>
+        <p class="subtitulo" id="mensajeTelefono">Ingresa el código enviado a tu correo</p>
+        
+        <div class="codigo-container">
+            <input type="text" class="codigo-input" id="codigo1" maxlength="1" inputmode="numeric" autofocus>
+            <input type="text" class="codigo-input" id="codigo2" maxlength="1" inputmode="numeric">
+            <input type="text" class="codigo-input" id="codigo3" maxlength="1" inputmode="numeric">
+            <input type="text" class="codigo-input" id="codigo4" maxlength="1" inputmode="numeric">
+            <input type="text" class="codigo-input" id="codigo5" maxlength="1" inputmode="numeric">
+        </div>
+        
+        <button class="btn-verificar" id="btnVerificar">Verificar</button>
+        
+        <div class="reenviar-container">
+            <a href="#" class="reenviar" id="btnReenviar">Reenviar código</a>
+            <span id="timer" class="timer"></span>
+        </div>
+    </div>
+
+    <script>
+        const telefono = sessionStorage.getItem('telefonoVerificacion');
+        const correo = sessionStorage.getItem('correoVerificacion');
+
+        if (!telefono) {
+            window.location.href = '/registro';
+        }
+
+        document.getElementById('mensajeTelefono').textContent = `Ingresa el código enviado a ${correo || 'tu correo'}`;
+
+        const inputs = document.querySelectorAll('.codigo-input');
+        
+        // Auto-avance entre campos
+        inputs.forEach((input, index) => {
+            input.addEventListener('input', function() {
+                if (this.value.length === 1 && index < inputs.length - 1) {
+                    inputs[index + 1].focus();
+                }
+                
+                // Si todos los campos están llenos, opcionalmente auto-verificar
+                const todosLlenos = Array.from(inputs).every(inp => inp.value.length === 1);
+                if (todosLlenos) {
+                    document.getElementById('btnVerificar').focus();
+                }
+            });
+            
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Backspace' && this.value.length === 0 && index > 0) {
+                    inputs[index - 1].focus();
+                }
+            });
+            
+            // Solo permitir números
+            input.addEventListener('keypress', function(e) {
+                if (!/[0-9]/.test(e.key)) {
+                    e.preventDefault();
+                }
+            });
+        });
+
+        // Timer para reenviar código
+        let tiempoRestante = 60;
+        const timerElement = document.getElementById('timer');
+        const btnReenviar = document.getElementById('btnReenviar');
+        
+        function actualizarTimer() {
+            if (tiempoRestante > 0) {
+                timerElement.textContent = ` (${tiempoRestante}s)`;
+                btnReenviar.style.pointerEvents = 'none';
+                btnReenviar.style.opacity = '0.5';
+                tiempoRestante--;
+                setTimeout(actualizarTimer, 1000);
+            } else {
+                timerElement.textContent = '';
+                btnReenviar.style.pointerEvents = 'auto';
+                btnReenviar.style.opacity = '1';
+            }
+        }
+        
+        actualizarTimer();
+
+        // Verificar código
+        document.getElementById('btnVerificar').addEventListener('click', async () => {
+            const codigo = Array.from(inputs).map(i => i.value).join('');
+            if (codigo.length !== 5) {
+                alert('Ingresa los 5 dígitos del código');
+                return;
+            }
+
+            const btnVerificar = document.getElementById('btnVerificar');
+            btnVerificar.disabled = true;
+            btnVerificar.textContent = 'Verificando...';
+
+            try {
+                const response = await fetch('/verificar-codigo', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ telefono, codigo })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Guardar el ID del usuario
+                    if (data.usuarioId) {
+                        sessionStorage.setItem('usuarioId', data.usuarioId);
+                    }
+                    // Redirigir a página de éxito
+                    window.location.href = `/verificado?userId=${data.usuarioId}`;
+                } else {
+                    alert(data.error || 'Código incorrecto');
+                    btnVerificar.disabled = false;
+                    btnVerificar.textContent = 'Verificar';
+                    
+                    // Limpiar inputs
+                    inputs.forEach(input => input.value = '');
+                    inputs[0].focus();
+                }
+            } catch (err) { 
+                console.error('Error:', err);
+                alert('Error de conexión');
+                btnVerificar.disabled = false;
+                btnVerificar.textContent = 'Verificar';
+            }
+        });
+
+        // Reenviar código
+        btnReenviar.addEventListener('click', async (e) => {
+            e.preventDefault();
+            
+            // Verificar si el timer ya terminó
+            if (tiempoRestante > 0) {
+                alert(`Espera ${tiempoRestante} segundos para reenviar el código`);
+                return;
+            }
+            
+            try {
+                btnReenviar.style.pointerEvents = 'none';
+                btnReenviar.textContent = 'Reenviando...';
+                
+                const response = await fetch('/reenviar-codigo', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ telefono: telefono })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert('Código reenviado correctamente a tu correo');
+                    // Reiniciar timer
+                    tiempoRestante = 60;
+                    actualizarTimer();
+                    
+                    // Mostrar código en consola si está en desarrollo
+                    if (data.codigo) {
+                        console.log('Código de prueba:', data.codigo);
+                    }
+                } else {
+                    alert(data.error || 'Error al reenviar el código');
+                    btnReenviar.style.pointerEvents = 'auto';
+                    btnReenviar.textContent = 'Reenviar código';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error de conexión');
+                btnReenviar.style.pointerEvents = 'auto';
+                btnReenviar.textContent = 'Reenviar código';
+            }
+        });
+
+        // Permitir enviar con Enter
+        inputs.forEach(input => {
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    document.getElementById('btnVerificar').click();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connex - Verificado</title>
+    <link rel="stylesheet" href="/css/verificado.css">
+</head>
+<body>
+    <div class="container">
+        <div class="checkmark-container">
+            <div class="checkmark">✓</div>
+        </div>
+        
+        <h1 class="titulo">¡Verificado!</h1>
+        
+        <p class="mensaje" id="mensajeVerificacion">Tu cuenta ha sido verificada exitosamente</p>
+        
+        <button class="btn-continuar" id="btnContinuar">Continuar</button>
+    </div>
+
+    <script>
+        // Obtener el ID del usuario de diferentes formas posibles
+        let usuarioId = null;
+        
+        // Primero intentar obtener de sessionStorage
+        usuarioId = sessionStorage.getItem('usuarioId');
+        
+        // Si no está en sessionStorage, buscar en la URL
+        if (!usuarioId) {
+            const urlParams = new URLSearchParams(window.location.search);
+            usuarioId = urlParams.get('userId');
+        }
+        
+        // Si aún no hay ID, mostrar error y redirigir
+        if (!usuarioId) {
+            console.error('No se encontró ID de usuario');
+            document.getElementById('mensajeVerificacion').innerHTML = 'Error: No se pudo identificar tu cuenta.<br>Por favor, regístrate nuevamente.';
+            document.getElementById('btnContinuar').textContent = 'Volver a registrar';
+            document.getElementById('btnContinuar').onclick = () => {
+                window.location.href = '/registro';
+            };
+        } else {
+            // Guardar el ID en sessionStorage para futuras páginas
+            sessionStorage.setItem('usuarioId', usuarioId);
+            
+            // Configurar el botón para ir a completar perfil
+            const btnContinuar = document.getElementById('btnContinuar');
+            btnContinuar.onclick = () => {
+                window.location.href = `/completar-perfil?userId=${usuarioId}`;
+            };
+        }
+    </script>
+</body>
+</html>

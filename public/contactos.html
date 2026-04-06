@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connex - Contactos</title>
+    <link rel="stylesheet" href="/css/global.css">
+    <link rel="stylesheet" href="/css/contactos.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Botón para abrir menú en móvil -->
+    <button class="menu-toggle" id="menuToggle">☰</button>
+    <div class="menu-overlay" id="menuOverlay"></div>
+
+    <div class="app-container">
+        <!-- Menú lateral izquierdo -->
+        <nav class="sidebar" id="sidebar">
+            <div class="logo">C</div>
+            <div class="nav-icons">
+                <span class="material-icons" onclick="location.href='chats.html'">chat</span>
+                <span class="material-icons active" onclick="location.href='contactos.html'">group</span>
+                <span class="material-icons" onclick="location.href='grupos.html'">groups</span>
+                <span class="material-icons" onclick="location.href='estados.html'">visibility</span>
+            </div>
+            <div class="nav-bottom">
+                <span class="material-icons" onclick="location.href='ajustes.html'">settings</span>
+            </div>
+        </nav>
+
+        <!-- Contenido principal -->
+        <main class="content">
+            <header class="main-header">
+                <h1>Contactos</h1>
+                <div class="header-actions">
+                    <button class="btn-icon" id="btnSincronizar" title="Sincronizar con agenda">
+                        <span class="material-icons">sync</span>
+                    </button>
+                </div>
+            </header>
+
+            <div class="contacts-container">
+                <!-- Barra de búsqueda -->
+                <div class="search-bar">
+                    <span class="material-icons">search</span>
+                    <input type="text" placeholder="Buscar contacto..." id="searchInput">
+                </div>
+
+                <!-- Botón nuevo contacto -->
+                <button class="new-contact-btn" id="btnNuevoContacto">
+                    <span class="material-icons">person_add</span>
+                    Nuevo Contacto
+                </button>
+
+                <!-- Contador de contactos -->
+                <div class="contacts-count" id="contactsCount">Cargando...</div>
+
+                <!-- Lista de contactos -->
+                <div class="contacts-list" id="contactsList">
+                    <div class="empty-state">
+                        <div class="empty-icon">👥</div>
+                        <p>Cargando contactos...</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal para agregar contacto manual -->
+    <div id="addContactModal" class="modal-overlay" style="display: none;">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2>Nuevo Contacto</h2>
+                <button class="btn-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Teléfono *</label>
+                    <input type="tel" id="contactPhone" placeholder="+506 8888 8888" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label>Nombre</label>
+                    <input type="text" id="contactName" placeholder="Nombre del contacto">
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+                    <button class="btn-submit" id="btnAgregarContacto">Agregar Contacto</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const userId = sessionStorage.getItem('usuarioId');
+        
+        if (!userId) {
+            window.location.href = '/registro';
+        }
+
+        let todosContactos = [];
+
+        // Función para obtener el estado del contacto
+        function getContactStatus(status) {
+            const statusMap = {
+                'online': { text: 'En línea', class: 'online' },
+                'offline': { text: 'Desconectado', class: 'offline' },
+                'busy': { text: 'Ocupado', class: 'busy' },
+                'away': { text: 'Ausente', class: 'away' }
+            };
+            return statusMap[status] || statusMap.offline;
+        }
+
+        // Función para obtener iniciales del nombre
+        function getInitials(nombre) {
+            if (!nombre) return '?';
+            const partes = nombre.split(' ');
+            if (partes.length >= 2) {
+                return (partes[0][0] + partes[1][0]).toUpperCase();
+            }
+            return nombre.substring(0, 2).toUpperCase();
+        }
+
+        // Renderizar contactos
+        function renderizarContactos(contactos) {
+            const contactsList = document.getElementById('contactsList');
+            const contactsCount = document.getElementById('contactsCount');
+            
+            if (!contactos || contactos.length === 0) {
+                contactsList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">👥</div>
+                        <p>No tienes contactos agregados</p>
+                        <p style="font-size: 13px; margin-top: 8px;">Agrega contactos desde tu agenda o manualmente</p>
+                    </div>
+                `;
+                contactsCount.textContent = '0 contactos';
+                return;
+            }
+
+            contactsCount.textContent = `${contactos.length} ${contactos.length === 1 ? 'contacto' : 'contactos'}`;
+            
+            contactsList.innerHTML = contactos.map(contacto => {
+                const status = getContactStatus(contacto.estado || 'offline');
+                const nombreMostrar = contacto.nombre_servidor_local || contacto.nombre_usuario;
+                const iniciales = getInitials(nombreMostrar);
+                
+                return `
+                    <div class="contact-item" data-id="${contacto.id_usuario}">
+                        ${contacto.foto_url ? 
+                            `<img src="${contacto.foto_url}" class="contact-avatar" onerror="this.src='/img/default-avatar.png'">` :
+                            `<div class="contact-avatar" style="background: linear-gradient(135deg, #7b2ff7, #a64dff); display: flex; align-items: center; justify-content: center; font-size: 18px;">${iniciales}</div>`
+                        }
+                        <div class="contact-info">
+                            <div class="contact-name">${escapeHtml(nombreMostrar)}</div>
+                            <div class="contact-status ${status.class}">
+                                <span class="status-dot ${status.class}"></span>
+                                <span>${status.text}</span>
+                            </div>
+                        </div>
+                        <button class="chat-button" onclick="event.stopPropagation(); iniciarChat(${contacto.id_usuario}, '${escapeHtml(contacto.nombre_usuario)}', '${contacto.foto_url || ''}')">
+                            <span class="material-icons">chat</span>
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Buscar contactos en tiempo real
+        document.getElementById('searchInput')?.addEventListener('input', function(e) {
+            const busqueda = e.target.value.toLowerCase().trim();
+            
+            if (busqueda === '') {
+                renderizarContactos(todosContactos);
+                return;
+            }
+            
+            const filtrados = todosContactos.filter(contacto => 
+                (contacto.nombre_servidor_local || contacto.nombre_usuario).toLowerCase().includes(busqueda) ||
+                (contacto.telefono || '').includes(busqueda)
+            );
+            
+            renderizarContactos(filtrados);
+        });
+
+        // Cargar contactos
+        async function cargarContactos() {
+            try {
+                const response = await fetch(`/contactos/${userId}`);
+                const contactos = await response.json();
+                todosContactos = contactos;
+                renderizarContactos(contactos);
+            } catch (error) {
+                console.error('Error cargando contactos:', error);
+                document.getElementById('contactsList').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">⚠️</div>
+                        <p>Error al cargar contactos</p>
+                        <p style="font-size: 13px;">Intenta recargar la página</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Iniciar chat con contacto
+        window.iniciarChat = function(chatId, nombre, fotoUrl) {
+            sessionStorage.setItem('chatActualId', chatId);
+            sessionStorage.setItem('chatActualNombre', nombre);
+            sessionStorage.setItem('chatActualFoto', fotoUrl);
+            window.location.href = `/conversacion?chatId=${chatId}&nombre=${encodeURIComponent(nombre)}`;
+        };
+
+        // Sincronizar con agenda del teléfono
+        async function sincronizarContactos() {
+            if (!navigator.contacts) {
+                alert('Tu navegador no soporta la sincronización de contactos. Puedes agregar contactos manualmente con el botón "Nuevo Contacto".');
+                return;
+            }
+            
+            try {
+                const contacts = await navigator.contacts.select(['name', 'tel'], { multiple: true });
+                
+                if (!contacts || contacts.length === 0) {
+                    alert('No se seleccionaron contactos');
+                    return;
+                }
+                
+                const contactosFormateados = contacts.map(contact => ({
+                    nombre: contact.name?.[0] || 'Sin nombre',
+                    telefono: contact.tel?.[0] || ''
+                })).filter(c => c.telefono);
+                
+                const response = await fetch('/sincronizar-contactos', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: parseInt(userId),
+                        contactos: contactosFormateados
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert(`Se encontraron ${data.contactosRegistrados?.length || 0} contactos en Connex`);
+                    cargarContactos();
+                } else {
+                    alert(data.error || 'Error al sincronizar contactos');
+                }
+            } catch (error) {
+                console.error('Error al acceder a contactos:', error);
+                alert('No se pudo acceder a los contactos. Verifica los permisos.');
+            }
+        }
+
+        // Agregar contacto manualmente
+        async function agregarContactoManual() {
+            const telefono = document.getElementById('contactPhone').value.trim();
+            const nombre = document.getElementById('contactName').value.trim();
+            
+            if (!telefono) {
+                alert('Por favor ingresa un número de teléfono');
+                return;
+            }
+            
+            const contactosFormateados = [{
+                nombre: nombre || 'Contacto',
+                telefono: telefono
+            }];
+            
+            try {
+                const response = await fetch('/sincronizar-contactos', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: parseInt(userId),
+                        contactos: contactosFormateados
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    if (data.contactosRegistrados?.length > 0) {
+                        alert(`Contacto agregado correctamente`);
+                        closeModal();
+                        cargarContactos();
+                    } else {
+                        alert('Este número de teléfono no está registrado en Connex. Invita a tu amigo a unirse a la plataforma.');
+                    }
+                } else {
+                    alert(data.error || 'Error al agregar contacto');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error de conexión');
+            }
+        }
+
+        // Modal functions
+        function openModal() {
+            document.getElementById('addContactModal').style.display = 'flex';
+            document.getElementById('contactPhone').value = '';
+            document.getElementById('contactName').value = '';
+            document.getElementById('contactPhone').focus();
+        }
+        
+        function closeModal() {
+            document.getElementById('addContactModal').style.display = 'none';
+        }
+
+        // Escapar HTML
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Event listeners
+        document.getElementById('btnSincronizar')?.addEventListener('click', sincronizarContactos);
+        document.getElementById('btnNuevoContacto')?.addEventListener('click', openModal);
+        document.getElementById('btnAgregarContacto')?.addEventListener('click', agregarContactoManual);
+        
+        // Cerrar modal con Escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
+
+        // Funcionalidad del menú móvil
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+        const menuOverlay = document.getElementById('menuOverlay');
+
+        function toggleMobileMenu() {
+            sidebar.classList.toggle('open');
+            menuOverlay.classList.toggle('active');
+        }
+
+        function closeMobileMenu() {
+            sidebar.classList.remove('open');
+            menuOverlay.classList.remove('active');
+        }
+
+        if (menuToggle) {
+            menuToggle.addEventListener('click', toggleMobileMenu);
+        }
+        if (menuOverlay) {
+            menuOverlay.addEventListener('click', closeMobileMenu);
+        }
+
+        document.querySelectorAll('.sidebar .material-icons').forEach(icon => {
+            icon.addEventListener('click', () => {
+                if (window.innerWidth <= 768) {
+                    closeMobileMenu();
+                }
+            });
+        });
+
+        // Cargar contactos al iniciar
+        cargarContactos();
+        
+        // Recargar contactos cada 30 segundos
+        setInterval(cargarContactos, 30000);
+    </script>
+</body>
+</html>

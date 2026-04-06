@@ -1,0 +1,94 @@
+/* Variables y Reset */
+:root {
+    --bg-main: #0f0f14;
+    --bg-secondary: #1a1a22;
+    --bg-card: #1e1e1e;
+    --border-color: #2a2a32;
+    --text-primary: #ffffff;
+    --text-secondary: #9c9ca6;
+    --primary: #7b2ff7;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg-main);
+    color: var(--text-primary);
+    overflow: hidden; 
+}
+
+.app-container {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+}
+
+/* Sidebar Universal */
+.sidebar {
+    width: 75px;
+    background-color: var(--sidebar-bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 25px 0;
+    border-right: 1px solid var(--border-color);
+    justify-content: space-between; /* Corregido */
+}
+
+.logo {
+    color: var(--primary-purple);
+    font-size: 28px;
+    font-weight: bold;
+    margin-bottom: 30px;
+}
+
+.nav-icons {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    flex-grow: 1;
+}
+
+.nav-icons span, .nav-bottom span {
+    color: var(--text-gray);
+    cursor: pointer;
+    font-size: 30px;
+    transition: 0.3s;
+    padding: 10px;
+}
+
+.nav-icons span.active {
+    color: var(--text-white);
+    background-color: var(--primary-purple);
+    border-radius: 12px;
+}
+
+.nav-bottom {
+    margin-top: auto;
+}
+
+/* Área de contenido corregida para PC */
+.content {
+    flex: 1;
+    padding: 40px;
+    overflow-y: auto;
+    background-color: var(--bg-dark);
+    display: block; /* Cambiado de flex a block para mejor control del grid interno */
+}
+
+@media (max-width: 480px) {
+    .sidebar {
+        width: 60px; /* Más delgada en celulares pequeños */
+    }
+    .logo {
+        font-size: 20px;
+    }
+    .nav-icons span {
+        font-size: 24px; /* Iconos un pelín más pequeños */
+    }
+}

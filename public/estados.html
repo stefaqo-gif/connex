@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Estados – ConneX</title>
+  <link rel="stylesheet" href="css/global.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: radial-gradient(circle at center, #1a0033 0%, #0a0015 40%, #000 100%);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Barra de navegación ── */
+    .nav-bar {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      background: rgba(20, 0, 40, 0.95);
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(123, 47, 247, 0.3);
+    }
+    .nav-bar span {
+      cursor: pointer;
+      color: #aaa;
+      font-size: 26px;
+      transition: color 0.2s;
+    }
+    .nav-bar span:hover, .nav-bar span.active { color: #a64dff; }
+
+    /* ── Encabezado ── */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 20px;
+      background: rgba(10, 0, 25, 0.8);
+      border-bottom: 1px solid rgba(123, 47, 247, 0.2);
+    }
+    .header h1 { font-size: 20px; font-weight: 600; }
+    .header .btn-add {
+      margin-left: auto;
+      background: linear-gradient(135deg, #7b2ff7, #a64dff);
+      border: none;
+      color: #fff;
+      border-radius: 50%;
+      width: 40px; height: 40px;
+      cursor: pointer;
+      font-size: 22px;
+      display: flex; align-items: center; justify-content: center;
+      transition: opacity 0.2s;
+    }
+    .header .btn-add:hover { opacity: 0.85; }
+
+    /* ── Lista de estados ── */
+    .estados-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* ── Sección "Mis estados" ── */
+    .section-label {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #a64dff;
+      padding: 4px 4px 6px;
+    }
+
+    .empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      opacity: 0.6;
+      padding: 40px;
+      text-align: center;
+    }
+    .empty-state .material-icons { font-size: 64px; color: #a64dff; }
+    .empty-state p { font-size: 15px; line-height: 1.5; }
+
+    /* ── Item de estado ── */
+    .estado-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 14px;
+      padding: 12px 16px;
+      cursor: pointer;
+      transition: background 0.2s;
+      position: relative;
+    }
+    .estado-item:hover { background: rgba(123, 47, 247, 0.15); }
+    .estado-item.viewed .avatar-ring { border-color: #555; }
+
+    .avatar-ring {
+      width: 52px; height: 52px;
+      border-radius: 50%;
+      border: 2.5px solid #a64dff;
+      padding: 2px;
+      flex-shrink: 0;
+      transition: border-color 0.3s;
+    }
+    .avatar-ring img {
+      width: 100%; height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .avatar-ring .default-avatar {
+      width: 100%; height: 100%;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #7b2ff7, #a64dff);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; font-weight: 700; color: #fff;
+    }
+    .estado-info { flex: 1; overflow: hidden; }
+    .estado-info .name { font-weight: 600; font-size: 15px; }
+    .estado-info .time { font-size: 12px; color: #aaa; margin-top: 2px; }
+    .estado-info .views {
+      font-size: 11px;
+      color: #7b7b7b;
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .estado-info .views .material-icons { font-size: 12px; }
+
+    /* ── Botón silenciar ── */
+    .btn-mute {
+      background: none;
+      border: none;
+      color: #555;
+      cursor: pointer;
+      padding: 6px;
+      border-radius: 50%;
+      transition: color 0.2s, background 0.2s;
+      display: flex; align-items: center;
+    }
+    .btn-mute:hover { color: #a64dff; background: rgba(166, 77, 255, 0.1); }
+    .btn-mute.muted { color: #a64dff; }
+
+    /* ── Viewer de estado (fullscreen) ── */
+    #storyViewer {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: #000;
+      flex-direction: column;
+    }
+    #storyViewer.open { display: flex; }
+
+    .viewer-bg {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .viewer-bg img.story-img {
+      max-width: 100%; max-height: 100%;
+      object-fit: contain;
+    }
+    .viewer-text {
+      font-size: 20px;
+      font-weight: 600;
+      text-align: center;
+      padding: 24px;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+      z-index: 1;
+    }
+
+    /* Barra de progreso */
+    .progress-bar-wrap {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: rgba(255,255,255,0.25);
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: #a64dff;
+      transition: width linear;
+      width: 0%;
+    }
+
+    /* Header del viewer */
+    .viewer-header {
+      position: absolute;
+      top: 12px; left: 0; right: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 16px;
+      z-index: 2;
+    }
+    .viewer-header .v-avatar {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      object-fit: cover;
+    }
+    .viewer-header .v-avatar-default {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #7b2ff7, #a64dff);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 16px; color: #fff;
+      border: 2px solid #fff;
+      flex-shrink: 0;
+    }
+    .viewer-header .v-info { flex: 1; }
+    .viewer-header .v-name { font-weight: 600; font-size: 14px; }
+    .viewer-header .v-time { font-size: 11px; color: #ccc; }
+    .viewer-header .btn-close {
+      background: none; border: none; color: #fff;
+      cursor: pointer; font-size: 26px;
+      display: flex; align-items: center;
+    }
+
+    /* Navegación viewer */
+    .viewer-nav {
+      position: absolute;
+      top: 0; bottom: 0;
+      width: 40%;
+      cursor: pointer;
+    }
+    .viewer-nav.prev { left: 0; }
+    .viewer-nav.next { right: 0; }
+
+    /* Footer viewer: vistas */
+    .viewer-footer {
+      background: rgba(0,0,0,0.6);
+      padding: 10px 20px;
+      font-size: 13px;
+      color: #ccc;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .viewer-footer .material-icons { font-size: 16px; color: #a64dff; }
+
+    /* ── Modal publicar estado ── */
+    #modalPublicar {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: rgba(0,0,0,0.7);
+      align-items: flex-end;
+      justify-content: center;
+    }
+    #modalPublicar.open { display: flex; }
+    .modal-box {
+      background: #1a0033;
+      border-radius: 20px 20px 0 0;
+      padding: 24px 20px 36px;
+      width: 100%;
+      max-width: 480px;
+      border-top: 1px solid rgba(123,47,247,0.4);
+      animation: slideUp 0.25s ease;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(40px); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
+    .modal-box h2 { font-size: 18px; margin-bottom: 16px; }
+
+    /* Paleta de colores */
+    .color-palette {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+    .color-dot {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2.5px solid transparent;
+      transition: border-color 0.2s, transform 0.15s;
+    }
+    .color-dot.selected { border-color: #fff; transform: scale(1.15); }
+
+    .modal-box textarea {
+      width: 100%;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(123,47,247,0.4);
+      border-radius: 10px;
+      color: #fff;
+      font-size: 15px;
+      padding: 12px;
+      resize: none;
+      height: 90px;
+      outline: none;
+      font-family: inherit;
+    }
+    .modal-box textarea::placeholder { color: #777; }
+
+    /* Preview */
+    #colorPreview {
+      width: 100%;
+      height: 60px;
+      border-radius: 10px;
+      margin: 10px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      transition: background 0.2s;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+      overflow: hidden;
+    }
+    #colorPreview img {
+      max-height: 60px;
+      max-width: 100%;
+      border-radius: 8px;
+      object-fit: cover;
+    }
+
+    /* Upload de imagen */
+    .upload-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      font-size: 13px;
+      color: #aaa;
+    }
+    .upload-row label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(123,47,247,0.3);
+      border-radius: 8px;
+      padding: 6px 12px;
+      transition: background 0.2s;
+    }
+    .upload-row label:hover { background: rgba(123,47,247,0.15); }
+    .upload-row label .material-icons { font-size: 18px; color: #a64dff; }
+    #imgFileInput { display: none; }
+    #imgFileName { font-size: 12px; color: #888; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    #btnClearImg {
+      background: none; border: none; color: #555;
+      cursor: pointer; font-size: 18px;
+      display: none;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .modal-actions button {
+      flex: 1;
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .btn-cancel { background: rgba(255,255,255,0.08); color: #ccc; }
+    .btn-publish {
+      background: linear-gradient(135deg, #7b2ff7, #a64dff);
+      color: #fff;
+    }
+    .btn-publish:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* ── Snackbar ── */
+    #snackbar {
+      position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+      background: #333; color: #fff; padding: 10px 22px;
+      border-radius: 20px; font-size: 14px;
+      opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 999;
+    }
+    #snackbar.show { opacity: 1; }
+
+    /* ── Loader ── */
+    .loader-wrap {
+      display: flex; align-items: center; justify-content: center;
+      padding: 40px;
+    }
+    .loader {
+      width: 36px; height: 36px;
+      border: 3px solid rgba(166,77,255,0.3);
+      border-top-color: #a64dff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+  <!-- Barra de navegación superior -->
+  <nav class="nav-bar">
+    <span class="material-icons" onclick="location.href='chats.html'" title="Chats">chat</span>
+    <span class="material-icons" onclick="location.href='chatsgrupos.html'" title="Grupos">group</span>
+    <span class="material-icons active" title="Estados">visibility</span>
+    <span class="material-icons" onclick="location.href='contactos.html'" title="Contactos">contacts</span>
+    <span class="material-icons" onclick="location.href='ajustes.html'" title="Ajustes">settings</span>
+  </nav>
+
+  <!-- Encabezado -->
+  <div class="header">
+    <span class="material-icons" style="color:#a64dff;font-size:28px;">visibility</span>
+    <h1>Estados</h1>
+    <button class="btn-add" onclick="abrirModalPublicar()" title="Publicar estado">
+      <span class="material-icons" style="font-size:20px;">add</span>
+    </button>
+  </div>
+
+  <!-- Lista / estado vacío -->
+  <div class="estados-list" id="estadosList">
+    <div class="loader-wrap" id="loaderWrap">
+      <div class="loader"></div>
+    </div>
+    <div class="empty-state" id="emptyState" style="display:none;">
+      <span class="material-icons">visibility_off</span>
+      <p>Aún no hay estados de tus contactos.<br>¡Sé el primero en publicar uno!</p>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       VIEWER DE ESTADO (fullscreen)
+  ══════════════════════════════════════════ -->
+  <div id="storyViewer">
+    <div class="viewer-bg" id="viewerBg">
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="progressFill"></div>
+      </div>
+      <div class="viewer-header">
+        <div id="vAvatarWrap"></div>
+        <div class="v-info">
+          <div class="v-name" id="vName"></div>
+          <div class="v-time" id="vTime"></div>
+        </div>
+        <button class="btn-close" onclick="cerrarViewer()">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+      <!-- Zonas de tap prev/next -->
+      <div class="viewer-nav prev" onclick="prevStory()"></div>
+      <div class="viewer-nav next" onclick="nextStory()"></div>
+    </div>
+    <div class="viewer-footer" id="viewerFooter">
+      <span class="material-icons">visibility</span>
+      <span id="viewCount">0 vistas</span>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       MODAL PUBLICAR ESTADO
+  ══════════════════════════════════════════ -->
+  <div id="modalPublicar">
+    <div class="modal-box">
+      <h2>✨ Nuevo estado</h2>
+
+      <!-- Paleta de colores -->
+      <div class="color-palette" id="colorPalette"></div>
+
+      <!-- Upload de imagen -->
+      <div class="upload-row">
+        <label for="imgFileInput">
+          <span class="material-icons">image</span>
+          Subir imagen
+        </label>
+        <span id="imgFileName">Sin imagen</span>
+        <button id="btnClearImg" onclick="clearImagen()" title="Quitar imagen">
+          <span class="material-icons">cancel</span>
+        </button>
+      </div>
+      <input type="file" id="imgFileInput" accept="image/*" onchange="onImageSelect(event)">
+
+      <!-- Preview color/imagen -->
+      <div id="colorPreview">Vista previa</div>
+
+      <!-- Texto -->
+      <textarea id="textoEstado" placeholder="Escribe algo..." maxlength="300"
+        oninput="actualizarPreview()"></textarea>
+
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="cerrarModalPublicar()">Cancelar</button>
+        <button class="btn-publish" id="btnPublish" onclick="publicarEstado()">Publicar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="snackbar"></div>
+
+  <script>
+    /* ═══════════════════════════════════════════════
+       CONFIGURACIÓN
+    ═══════════════════════════════════════════════ */
+    const userId = sessionStorage.getItem('usuarioId');
+
+    // Duración por story en viewer (ms)
+    const STORY_DURATION = 5000;
+
+    // Paleta de colores disponibles
+    const COLORS = [
+      '#25D366', '#a64dff', '#7b2ff7', '#FF6B6B',
+      '#FFD93D', '#4ECDC4', '#1A535C', '#FF9F1C',
+      '#2EC4B6', '#E84855', '#3A86FF', '#8338EC'
+    ];
+
+    /* ═══════════════════════════════════════════════
+       ESTADO DE LA APP
+    ═══════════════════════════════════════════════ */
+    let allStories   = [];          // flat array de stories (del feed)
+    let myStories    = [];          // mis propios estados
+    let mutedUsers   = new Set();   // IDs silenciados localmente
+
+    // Viewer
+    let viewerStories = [];         // stories del usuario que se está viendo
+    let viewerIndex   = 0;
+    let progressTimer = null;
+
+    // Modal publicar
+    let selectedColor  = COLORS[0];
+    let selectedImage  = null;      // File | null
+    let selectedImageUrl = null;    // preview URL
+
+    /* ═══════════════════════════════════════════════
+       UTILIDADES
+    ═══════════════════════════════════════════════ */
+    function showSnack(msg) {
+      const s = document.getElementById('snackbar');
+      s.textContent = msg;
+      s.classList.add('show');
+      setTimeout(() => s.classList.remove('show'), 2500);
+    }
+
+    function timeAgo(dateStr) {
+      const diff = Date.now() - new Date(dateStr).getTime();
+      const m = Math.floor(diff / 60000);
+      if (m < 1)  return 'Ahora';
+      if (m < 60) return `Hace ${m} min`;
+      const h = Math.floor(m / 60);
+      if (h < 24) return `Hace ${h} h`;
+      return `Hace ${Math.floor(h/24)} día(s)`;
+    }
+
+    function avatarHTML(avatar, username, size = 48) {
+      const inicial = (username || '?')[0].toUpperCase();
+      if (avatar) {
+        return `<img src="${avatar}" alt="${username}"
+                  style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;"
+                  onerror="this.outerHTML='<div class=\\'default-avatar\\'>${inicial}</div>'">`;
+      }
+      return `<div class="default-avatar">${inicial}</div>`;
+    }
+
+    /* ═══════════════════════════════════════════════
+       CARGA DE DATOS
+    ═══════════════════════════════════════════════ */
+    async function cargarEstados() {
+      if (!userId) {
+        document.getElementById('loaderWrap').style.display = 'none';
+        document.getElementById('emptyState').style.display = 'flex';
+        return;
+      }
+      try {
+        // Feed de todos los usuarios activos
+        const [feedRes, myRes] = await Promise.all([
+          fetch(`/api/stories/feed/${userId}`),
+          fetch(`/api/stories/my/${userId}`)
+        ]);
+
+        if (feedRes.ok) allStories = await feedRes.json();
+        if (myRes.ok)   myStories  = await myRes.json();
+
+      } catch (e) {
+        console.warn('Error cargando estados:', e);
+      } finally {
+        document.getElementById('loaderWrap').style.display = 'none';
+        renderEstados();
+      }
+    }
+
+    /* ═══════════════════════════════════════════════
+       RENDER LISTA
+    ═══════════════════════════════════════════════ */
+    function renderEstados() {
+      const list  = document.getElementById('estadosList');
+      const empty = document.getElementById('emptyState');
+
+      // Limpiar (excepto loader y empty)
+      Array.from(list.children).forEach(el => {
+        if (!el.id) el.remove();
+      });
+
+      /* ── Mis estados ── */
+      if (myStories.length > 0) {
+        const label = document.createElement('div');
+        label.className = 'section-label';
+        label.textContent = 'Mis estados';
+        list.appendChild(label);
+
+        // Agrupamos mis stories por usuario (siempre soy yo)
+        list.appendChild(buildItem({
+          user_id:    userId,
+          username:   myStories[0].username || 'Yo',
+          avatar:     myStories[0].avatar   || null,
+          items:      myStories,
+          isMine:     true
+        }));
+      }
+
+      /* ── Estados de contactos ── */
+      // Filtrar los que no son míos
+      const contactStories = allStories.filter(s => String(s.user_id) !== String(userId));
+
+      // Agrupar por user_id
+      const grouped = {};
+      contactStories.forEach(s => {
+        const uid = String(s.user_id);
+        if (!grouped[uid]) {
+          grouped[uid] = {
+            user_id:  uid,
+            username: s.username,
+            avatar:   s.avatar,
+            items:    [],
+            allViewed: true
+          };
+        }
+        grouped[uid].items.push(s);
+        if (!s.viewed_by_me) grouped[uid].allViewed = false;
+      });
+
+      const keys = Object.keys(grouped);
+
+      if (keys.length === 0 && myStories.length === 0) {
+        empty.style.display = 'flex';
+        return;
+      }
+      empty.style.display = 'none';
+
+      if (keys.length > 0) {
+        const label = document.createElement('div');
+        label.className = 'section-label';
+        label.textContent = 'Recientes';
+        list.appendChild(label);
+
+        // Ordenar: no vistos primero
+        keys
+          .sort((a, b) => Number(grouped[a].allViewed) - Number(grouped[b].allViewed))
+          .forEach(uid => list.appendChild(buildItem(grouped[uid])));
+      }
+    }
+
+    function buildItem({ user_id, username, avatar, items, isMine = false, allViewed = false }) {
+      const item = document.createElement('div');
+      item.className = 'estado-item' + (allViewed ? ' viewed' : '');
+      item.dataset.uid = user_id;
+
+      const inicial = (username || '?')[0].toUpperCase();
+      const avatarEl = avatar
+        ? `<img src="${avatar}" alt="${username}"
+              style="width:100%;height:100%;border-radius:50%;object-fit:cover;"
+              onerror="this.outerHTML='<div class=\\'default-avatar\\'>${inicial}</div>'">`
+        : `<div class="default-avatar">${inicial}</div>`;
+
+      const lastItem = items[items.length - 1];
+      const tiempo = lastItem?.created_at ? timeAgo(lastItem.created_at) : '';
+      const totalViews = items.reduce((acc, s) => acc + (parseInt(s.view_count) || 0), 0);
+
+      const muteBtn = !isMine ? `
+        <button class="btn-mute ${mutedUsers.has(String(user_id)) ? 'muted' : ''}"
+                title="${mutedUsers.has(String(user_id)) ? 'Activar estados' : 'Silenciar'}"
+                onclick="toggleMute(event, '${user_id}')">
+          <span class="material-icons" style="font-size:20px;">
+            ${mutedUsers.has(String(user_id)) ? 'notifications_off' : 'notifications_active'}
+          </span>
+        </button>` : `
+        <button class="btn-mute" title="Eliminar mi estado"
+                onclick="eliminarMiEstado(event, '${items[0]?.id}')">
+          <span class="material-icons" style="font-size:20px;">delete_outline</span>
+        </button>`;
+
+      item.innerHTML = `
+        <div class="avatar-ring">${avatarEl}</div>
+        <div class="estado-info">
+          <div class="name">${username || 'Usuario'}</div>
+          <div class="time">${tiempo}</div>
+          <div class="views">
+            <span class="material-icons">visibility</span>
+            ${totalViews} vista${totalViews !== 1 ? 's' : ''}
+            · ${items.length} estado${items.length !== 1 ? 's' : ''}
+          </div>
+        </div>
+        ${muteBtn}
+        <span class="material-icons" style="color:#a64dff;font-size:20px;margin-left:4px;">
+          arrow_forward_ios
+        </span>`;
+
+      // Click en el item abre el viewer
+      item.addEventListener('click', (e) => {
+        if (e.target.closest('.btn-mute')) return;
+        abrirViewer(items, username, avatar);
+      });
+
+      return item;
+    }
+
+    /* ═══════════════════════════════════════════════
+       VIEWER DE ESTADO
+    ═══════════════════════════════════════════════ */
+    function abrirViewer(stories, username, avatar) {
+      viewerStories = stories;
+      viewerIndex   = 0;
+      document.getElementById('storyViewer').classList.add('open');
+      mostrarStory(viewerIndex);
+    }
+
+    function cerrarViewer() {
+      clearTimeout(progressTimer);
+      document.getElementById('storyViewer').classList.remove('open');
+      // Refrescar para actualizar "vistos"
+      cargarEstados();
+    }
+
+    function mostrarStory(index) {
+      clearTimeout(progressTimer);
+      const story = viewerStories[index];
+      if (!story) { cerrarViewer(); return; }
+
+      // Fondo
+      const bg = document.getElementById('viewerBg');
+      bg.style.background = story.bg_color || '#25D366';
+
+      // Limpiar contenido previo
+      const oldImg   = bg.querySelector('.story-img');
+      const oldTxt   = bg.querySelector('.viewer-text');
+      if (oldImg) oldImg.remove();
+      if (oldTxt) oldTxt.remove();
+
+      if (story.image_url) {
+        const img = document.createElement('img');
+        img.className = 'story-img';
+        img.src = story.image_url;
+        bg.appendChild(img);
+      }
+      if (story.content) {
+        const txt = document.createElement('div');
+        txt.className = 'viewer-text';
+        txt.textContent = story.content;
+        bg.appendChild(txt);
+      }
+
+      // Header
+      const vAvatarWrap = document.getElementById('vAvatarWrap');
+      const inicial = (story.username || '?')[0].toUpperCase();
+      if (story.avatar) {
+        vAvatarWrap.innerHTML =
+          `<img class="v-avatar" src="${story.avatar}" alt="${story.username}"
+               onerror="this.outerHTML='<div class=\\'v-avatar-default\\'>${inicial}</div>'">`;
+      } else {
+        vAvatarWrap.innerHTML =
+          `<div class="v-avatar-default">${inicial}</div>`;
+      }
+      document.getElementById('vName').textContent   = story.username || 'Usuario';
+      document.getElementById('vTime').textContent   = story.created_at ? timeAgo(story.created_at) : '';
+      document.getElementById('viewCount').textContent =
+        `${story.view_count || 0} vista${story.view_count !== 1 ? 's' : ''}`;
+
+      // Barra de progreso
+      const fill = document.getElementById('progressFill');
+      fill.style.transition = 'none';
+      fill.style.width = '0%';
+      // forzar reflow
+      fill.offsetWidth;
+      fill.style.transition = `width ${STORY_DURATION}ms linear`;
+      fill.style.width = '100%';
+
+      // Marcar como visto en el backend
+      if (userId && story.id) {
+        fetch(`/api/stories/${story.id}/view`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ viewerId: userId })
+        }).catch(() => {});
+      }
+
+      // Auto-avanzar
+      progressTimer = setTimeout(nextStory, STORY_DURATION);
+    }
+
+    function nextStory() {
+      if (viewerIndex < viewerStories.length - 1) {
+        viewerIndex++;
+        mostrarStory(viewerIndex);
+      } else {
+        cerrarViewer();
+      }
+    }
+
+    function prevStory() {
+      if (viewerIndex > 0) {
+        viewerIndex--;
+        mostrarStory(viewerIndex);
+      }
+    }
+
+    /* ═══════════════════════════════════════════════
+       SILENCIAR USUARIO
+    ═══════════════════════════════════════════════ */
+    async function toggleMute(event, targetUserId) {
+      event.stopPropagation();
+      if (!userId) return;
+      try {
+        const res = await fetch(`/api/stories/mute`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ muterId: userId, mutedId: targetUserId })
+        });
+        if (!res.ok) throw new Error();
+        const { muted } = await res.json();
+        if (muted) {
+          mutedUsers.add(String(targetUserId));
+          showSnack('Usuario silenciado');
+        } else {
+          mutedUsers.delete(String(targetUserId));
+          showSnack('Usuario activado');
+        }
+        renderEstados();
+      } catch {
+        showSnack('Error al silenciar usuario');
+      }
+    }
+
+    /* ═══════════════════════════════════════════════
+       ELIMINAR MI ESTADO
+    ═══════════════════════════════════════════════ */
+    async function eliminarMiEstado(event, storyId) {
+      event.stopPropagation();
+      if (!userId || !storyId) return;
+      if (!confirm('¿Eliminar este estado?')) return;
+      try {
+        const res = await fetch(`/api/stories/${storyId}`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId })
+        });
+        if (!res.ok) throw new Error();
+        showSnack('Estado eliminado');
+        cargarEstados();
+      } catch {
+        showSnack('Error al eliminar estado');
+      }
+    }
+
+    /* ═══════════════════════════════════════════════
+       MODAL PUBLICAR ESTADO
+    ═══════════════════════════════════════════════ */
+    function abrirModalPublicar() {
+      // Inicializar paleta si es primera vez
+      const palette = document.getElementById('colorPalette');
+      if (!palette.children.length) {
+        COLORS.forEach(color => {
+          const dot = document.createElement('div');
+          dot.className = 'color-dot' + (color === selectedColor ? ' selected' : '');
+          dot.style.background = color;
+          dot.onclick = () => seleccionarColor(color, dot);
+          palette.appendChild(dot);
+        });
+      }
+      actualizarPreview();
+      document.getElementById('modalPublicar').classList.add('open');
+    }
+
+    function cerrarModalPublicar() {
+      document.getElementById('modalPublicar').classList.remove('open');
+      // Reset
+      document.getElementById('textoEstado').value = '';
+      clearImagen();
+    }
+
+    function seleccionarColor(color, dot) {
+      selectedColor = color;
+      document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
+      dot.classList.add('selected');
+      actualizarPreview();
+    }
+
+    function onImageSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      selectedImage    = file;
+      selectedImageUrl = URL.createObjectURL(file);
+      document.getElementById('imgFileName').textContent = file.name;
+      document.getElementById('btnClearImg').style.display = 'block';
+      actualizarPreview();
+    }
+
+    function clearImagen() {
+      selectedImage    = null;
+      selectedImageUrl = null;
+      document.getElementById('imgFileName').textContent = 'Sin imagen';
+      document.getElementById('btnClearImg').style.display = 'none';
+      document.getElementById('imgFileInput').value = '';
+      actualizarPreview();
+    }
+
+    function actualizarPreview() {
+      const preview = document.getElementById('colorPreview');
+      const texto   = document.getElementById('textoEstado').value;
+      if (selectedImageUrl) {
+        preview.style.background = 'transparent';
+        preview.innerHTML = `<img src="${selectedImageUrl}" alt="preview">`;
+      } else {
+        preview.style.background = selectedColor;
+        preview.innerHTML = texto
+          ? `<span style="padding:0 16px;">${texto}</span>`
+          : 'Vista previa';
+      }
+    }
+
+    async function publicarEstado() {
+      if (!userId) { showSnack('Debes iniciar sesión'); return; }
+
+      const texto  = document.getElementById('textoEstado').value.trim();
+      const btnPub = document.getElementById('btnPublish');
+
+      if (!texto && !selectedImage) {
+        showSnack('Escribe algo o selecciona una imagen');
+        return;
+      }
+
+      btnPub.disabled = true;
+      btnPub.textContent = 'Publicando…';
+
+      try {
+        let imageUrl = null;
+
+        // Si hay imagen, subirla primero
+        if (selectedImage) {
+          const formData = new FormData();
+          formData.append('image', selectedImage);
+          const upRes = await fetch('/api/upload', { method: 'POST', body: formData });
+          if (upRes.ok) {
+            const upData = await upRes.json();
+            imageUrl = upData.url || upData.imageUrl || null;
+          }
+        }
+
+        const body = {
+          userId,
+          content:  texto,
+          bgColor:  selectedColor,
+          imageUrl: imageUrl
+        };
+
+        const res = await fetch('/api/stories', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+
+        if (!res.ok) throw new Error();
+
+        showSnack('¡Estado publicado!');
+        cerrarModalPublicar();
+        cargarEstados();
+
+      } catch {
+        showSnack('Error al publicar el estado');
+      } finally {
+        btnPub.disabled    = false;
+        btnPub.textContent = 'Publicar';
+      }
+    }
+
+    /* ═══════════════════════════════════════════════
+       INIT
+    ═══════════════════════════════════════════════ */
+    cargarEstados();
+  </script>
+</body>
+</html>
